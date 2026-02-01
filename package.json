@@ -1,0 +1,33 @@
+{
+  "name": "finchronicle-tests",
+  "version": "1.0.0",
+  "description": "Testing suite for FinChronicle PWA",
+  "type": "module",
+  "scripts": {
+    "extract": "node scripts/extract-functions.js",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:unit": "npm run extract && vitest run tests/unit",
+    "test:integration": "npm run extract && vitest run tests/integration",
+    "test:e2e": "playwright test",
+    "test:watch": "npm run extract && vitest",
+    "test:coverage": "npm run extract && vitest --coverage",
+    "test:ui": "npm run extract && vitest --ui",
+    "playwright:ui": "playwright test --ui",
+    "playwright:debug": "playwright test --debug",
+    "playwright:report": "playwright show-report"
+  },
+  "keywords": [
+    "testing",
+    "pwa",
+    "finchronicle"
+  ],
+  "author": "Kiren Labs",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.41.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "@vitest/ui": "^1.2.0",
+    "happy-dom": "^13.0.0",
+    "vitest": "^1.2.0"
+  }
+}
