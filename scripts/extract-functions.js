@@ -54,16 +54,36 @@ if (categoriesMatch) {
   moduleContent += `const categories = ${categoriesMatch[1]};\n\n`
 }
 
+// Helper function to extract complete function body
+function extractFunction(code, functionName) {
+  const funcRegex = new RegExp(`function\\s+${functionName}\\s*\\([^)]*\\)\\s*\\{`)
+  const match = funcRegex.exec(code)
+
+  if (!match) return null
+
+  let braceCount = 1
+  let i = match.index + match[0].length
+
+  // Find matching closing brace
+  while (i < code.length && braceCount > 0) {
+    if (code[i] === '{') braceCount++
+    if (code[i] === '}') braceCount--
+    i++
+  }
+
+  if (braceCount === 0) {
+    return code.substring(match.index, i)
+  }
+
+  return null
+}
+
 // Extract each function
 let extractedCount = 0
 functions.forEach((fnName) => {
-  const regex = new RegExp(
-    `function ${fnName}\\([^)]*\\)[\\s\\S]*?(?=\\n\\s*(?:function|const|let|var|\\<\\/script|$))`,
-    'm'
-  )
-  const match = scriptContent.match(regex)
-  if (match) {
-    moduleContent += `export ${match[0]}\n\n`
+  const extracted = extractFunction(scriptContent, fnName)
+  if (extracted) {
+    moduleContent += `export ${extracted}\n\n`
     extractedCount++
   } else {
     console.warn(`⚠️  Function not found: ${fnName}`)
