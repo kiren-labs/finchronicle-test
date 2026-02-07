@@ -12,6 +12,11 @@ console.log('📖 Reading app.js from:', appJsPath)
 
 const scriptContent = readFileSync(appJsPath, 'utf-8')
 
+// Extract version from app.js
+const versionMatch = scriptContent.match(/const APP_VERSION = ['"]([^'"]+)['"]/)
+const appVersion = versionMatch ? versionMatch[1] : 'unknown'
+console.log(`📦 App version: ${appVersion}`)
+
 // List of functions to extract for testing
 const functions = [
   'formatCurrency',
@@ -25,12 +30,20 @@ const functions = [
   'findHeaderIndex',
   'getCurrencySymbol',
   'getCurrency',
+  // v3.7.0+ trend calculation functions
+  'getPreviousMonth',
+  'getMonthTotals',
+  'calculateMoMDelta',
+  'calculateExpensePercentage',
 ]
 
 // Build testable module
 let moduleContent = `// Auto-generated from app.js
 // Do not edit manually - run 'npm run extract' to regenerate
 // Generated at: ${new Date().toISOString()}
+// App version: ${appVersion}
+
+export const APP_VERSION = '${appVersion}';
 
 `
 
@@ -97,8 +110,21 @@ if (typeof localStorage === 'undefined') {
 // Write to src/app.js
 writeFileSync(outputPath, moduleContent)
 
+// Write version metadata
+const versionMetadata = {
+  appVersion,
+  testedAt: new Date().toISOString(),
+  extractedFunctions: extractedCount,
+  totalFunctions: functions.length,
+  success: extractedCount === functions.length
+}
+const metadataPath = resolve(__dirname, '../test-metadata.json')
+writeFileSync(metadataPath, JSON.stringify(versionMetadata, null, 2))
+
 console.log(`✅ Functions extracted successfully!`)
+console.log(`   App version: ${appVersion}`)
 console.log(`   Output: src/app.js`)
+console.log(`   Metadata: test-metadata.json`)
 console.log(`   Extracted: ${extractedCount}/${functions.length} functions`)
 
 if (extractedCount < functions.length) {

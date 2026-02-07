@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run test:e2e:*)",
+      "Bash(npx playwright install)",
+      "Bash(npm run test:unit:*)",
+      "Bash(lsof:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7"
+  ]
+}
