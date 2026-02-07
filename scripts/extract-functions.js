@@ -5,20 +5,12 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const indexPath = resolve(__dirname, '../../finance-tracker/index.html')
+const appJsPath = resolve(__dirname, '../../finance-tracker/app.js')
 const outputPath = resolve(__dirname, '../src/app.js')
 
-console.log('📖 Reading index.html from:', indexPath)
+console.log('📖 Reading app.js from:', appJsPath)
 
-const indexHtml = readFileSync(indexPath, 'utf-8')
-
-// Extract JavaScript between <script> tags
-const scriptMatch = indexHtml.match(/<script>([\s\S]*?)<\/script>/)
-if (!scriptMatch) {
-  throw new Error('❌ No script found in index.html')
-}
-
-const scriptContent = scriptMatch[1]
+const scriptContent = readFileSync(appJsPath, 'utf-8')
 
 // List of functions to extract for testing
 const functions = [
@@ -36,7 +28,7 @@ const functions = [
 ]
 
 // Build testable module
-let moduleContent = `// Auto-generated from index.html
+let moduleContent = `// Auto-generated from app.js
 // Do not edit manually - run 'npm run extract' to regenerate
 // Generated at: ${new Date().toISOString()}
 

@@ -18,7 +18,7 @@ finance-tracker-tests/
 ├── vitest.config.js          # Unit/integration test config
 ├── playwright.config.js      # E2E test config
 ├── scripts/
-│   └── extract-functions.js  # Extracts testable functions from main app
+│   └── extract-functions.js  # Extracts testable functions from main app (app.js)
 ├── src/
 │   └── app.js               # Auto-generated testable functions
 └── tests/
@@ -157,7 +157,7 @@ npm run playwright:report
 
 ### Unit & Integration Tests
 
-1. **Extract Functions:** `npm run extract` extracts testable functions from `../finance-tracker/index.html`
+1. **Extract Functions:** `npm run extract` extracts testable functions from `../finance-tracker/app.js`
 2. **Generate Module:** Creates `src/app.js` with exported functions
 3. **Run Tests:** Vitest runs tests against extracted functions
 4. **Mock Environment:** localStorage and Date.now() are mocked for consistency
@@ -225,7 +225,7 @@ test('should perform user action', async ({ page }) => {
 - Solution: Update `scripts/extract-functions.js` to include new function names
 
 **Issue: E2E tests can't connect to server**
-- Solution: Ensure `../finance-tracker` exists and contains `index.html`
+- Solution: Ensure `../finance-tracker` exists and contains `app.js`
 - Solution: Check that port 8000 is not already in use
 
 **Issue: localStorage not persisting**
