@@ -1,0 +1,67 @@
+name: Scheduled Regression Tests
+
+on:
+  # Run every day at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  test-latest:
+    name: Test Against Latest Main
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout test repository
+      uses: actions/checkout@v4
+      with:
+        path: finance-tracker-tests
+
+    - name: Checkout main app (latest)
+      uses: actions/checkout@v4
+      with:
+        repository: kiren-labs/finance-tracker
+        ref: main
+        path: finance-tracker
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: finance-tracker-tests/package-lock.json
+
+    - name: Install dependencies
+      working-directory: finance-tracker-tests
+      run: npm ci
+
+    - name: Extract and test
+      working-directory: finance-tracker-tests
+      run: |
+        npm run extract
+        APP_VERSION=$(node -p "require('./test-metadata.json').appVersion")
+        echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+        echo "Testing against app version: $APP_VERSION"
+
+    - name: Run all tests
+      working-directory: finance-tracker-tests
+      run: npm test
+
+    - name: Create issue on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const version = process.env.APP_VERSION;
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 Scheduled tests failed for v${version}`,
+            body: `Automated regression tests failed for main app version \`v${version}\`.
+
+            **Workflow Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+
+            Please investigate and fix the failing tests.`,
+            labels: ['bug', 'automated-test-failure']
+          });

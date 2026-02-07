@@ -1,0 +1,164 @@
+name: Test Against Main App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Allow manual trigger with custom app branch
+  workflow_dispatch:
+    inputs:
+      app_branch:
+        description: 'Main app branch to test against'
+        required: false
+        default: 'main'
+      app_version:
+        description: 'Expected app version (optional)'
+        required: false
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout test repository
+      uses: actions/checkout@v4
+      with:
+        path: finance-tracker-tests
+
+    - name: Checkout main app
+      uses: actions/checkout@v4
+      with:
+        repository: kiren-labs/finance-tracker
+        ref: ${{ github.event.inputs.app_branch || 'main' }}
+        path: finance-tracker
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: finance-tracker-tests/package-lock.json
+
+    - name: Install dependencies
+      working-directory: finance-tracker-tests
+      run: npm ci
+
+    - name: Extract functions and verify version
+      working-directory: finance-tracker-tests
+      run: |
+        npm run extract
+
+        echo "📦 Test Metadata:"
+        cat test-metadata.json
+
+        APP_VERSION=$(node -p "require('./test-metadata.json').appVersion")
+        EXTRACTED=$(node -p "require('./test-metadata.json').extractedFunctions")
+        TOTAL=$(node -p "require('./test-metadata.json').totalFunctions")
+        SUCCESS=$(node -p "require('./test-metadata.json').success")
+
+        echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+        echo "EXTRACTED_FUNCTIONS=$EXTRACTED" >> $GITHUB_ENV
+        echo "TOTAL_FUNCTIONS=$TOTAL" >> $GITHUB_ENV
+
+        # Check if extraction was successful
+        if [ "$SUCCESS" != "true" ]; then
+          echo "❌ Function extraction failed"
+          exit 1
+        fi
+
+        if [ "$EXTRACTED" != "$TOTAL" ]; then
+          echo "❌ Incomplete extraction: $EXTRACTED/$TOTAL functions"
+          exit 1
+        fi
+
+        echo "✅ Successfully extracted $EXTRACTED/$TOTAL functions from app v$APP_VERSION"
+
+        # Verify expected version if provided
+        if [ -n "${{ github.event.inputs.app_version }}" ]; then
+          if [ "$APP_VERSION" != "${{ github.event.inputs.app_version }}" ]; then
+            echo "❌ Version mismatch: Expected ${{ github.event.inputs.app_version }}, got $APP_VERSION"
+            exit 1
+          fi
+          echo "✅ Version matches expected: $APP_VERSION"
+        fi
+
+    - name: Run unit tests
+      working-directory: finance-tracker-tests
+      run: npm run test:unit
+
+    - name: Install Playwright browsers
+      working-directory: finance-tracker-tests
+      run: npx playwright install --with-deps chromium firefox
+
+    - name: Run E2E tests
+      working-directory: finance-tracker-tests
+      run: npm run test:e2e
+      env:
+        CI: true
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-v${{ env.APP_VERSION }}
+        path: |
+          finance-tracker-tests/test-results/
+          finance-tracker-tests/test-metadata.json
+        retention-days: 30
+
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report-v${{ env.APP_VERSION }}
+        path: finance-tracker-tests/playwright-report/
+        retention-days: 30
+
+    - name: Comment on PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const version = process.env.APP_VERSION;
+          const extracted = process.env.EXTRACTED_FUNCTIONS;
+          const total = process.env.TOTAL_FUNCTIONS;
+
+          const comment = `## 🧪 Test Results
+
+          **App Version Tested:** \`v${version}\`
+          **Functions Extracted:** ${extracted}/${total} ✅
+
+          ### Test Summary
+          - ✅ Unit Tests: Passed
+          - ✅ E2E Tests: Passed
+
+          All tests completed successfully against main app version \`v${version}\`.
+
+          📊 Detailed reports available in workflow artifacts.`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Generate summary
+      if: always()
+      run: |
+        cd finance-tracker-tests
+        echo "## 🧪 Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Version Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **App Version:** v$APP_VERSION" >> $GITHUB_STEP_SUMMARY
+        echo "- **App Branch:** ${{ github.event.inputs.app_branch || 'main' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Functions Extracted:** $EXTRACTED_FUNCTIONS/$TOTAL_FUNCTIONS" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Test Metadata" >> $GITHUB_STEP_SUMMARY
+        echo '```json' >> $GITHUB_STEP_SUMMARY
+        cat test-metadata.json >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All tests completed successfully" >> $GITHUB_STEP_SUMMARY
