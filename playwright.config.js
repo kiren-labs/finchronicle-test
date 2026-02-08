@@ -17,12 +17,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     // Performance optimizations
-    actionTimeout: 10000, // Reduce from default 30s
-    navigationTimeout: 30000, // Reduce from default 60s
-    serviceWorkers: 'block', // Block service workers in tests
-    launchOptions: {
-      args: ['--disable-blink-features=AutomationControlled'],
-    },
+    actionTimeout: 15000, // Reasonable timeout for actions
+    navigationTimeout: 30000,
   },
 
   projects: process.env.CI ? [
