@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 4 : undefined, // Parallel execution in CI
   reporter: 'html',
 
   use: {
@@ -14,7 +14,14 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  projects: [
+  projects: process.env.CI ? [
+    // CI: Only test on Chromium for speed
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ] : [
+    // Local: Test on all browsers
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },

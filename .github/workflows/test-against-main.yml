@@ -90,7 +90,7 @@ jobs:
 
     - name: Install Playwright browsers
       working-directory: finance-tracker-tests
-      run: npx playwright install --with-deps chromium firefox
+      run: npx playwright install --with-deps chromium
 
     - name: Run E2E tests
       working-directory: finance-tracker-tests
