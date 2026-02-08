@@ -15,6 +15,15 @@ on:
       app_version:
         description: 'Expected app version (optional)'
         required: false
+      run_e2e:
+        description: 'Run E2E tests (default: auto - only on main branch)'
+        required: false
+        type: choice
+        default: 'auto'
+        options:
+          - 'auto'
+          - 'yes'
+          - 'no'
 
 jobs:
   test:
@@ -89,13 +98,18 @@ jobs:
       run: npm run test:unit
 
     # E2E tests only run on main branch (not PRs)
+    # Manual triggers can override with run_e2e input
     - name: Install Playwright browsers
-      if: github.ref == 'refs/heads/main'
+      if: |
+        (github.ref == 'refs/heads/main') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_e2e == 'yes')
       working-directory: finance-tracker-tests
       run: npx playwright install --with-deps chromium
 
     - name: Run E2E tests
-      if: github.ref == 'refs/heads/main'
+      if: |
+        (github.ref == 'refs/heads/main' && github.event.inputs.run_e2e != 'no') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_e2e == 'yes')
       working-directory: finance-tracker-tests
       run: npm run test:e2e
       env:
