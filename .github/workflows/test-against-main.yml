@@ -2,9 +2,9 @@ name: Test Against Main App
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # Full tests (Unit + E2E) on main branch
   pull_request:
-    branches: [ main ]
+    branches: [ main ]  # Unit tests only on PR (E2E runs after merge)
   # Allow manual trigger with custom app branch
   workflow_dispatch:
     inputs:
@@ -88,11 +88,14 @@ jobs:
       working-directory: finance-tracker-tests
       run: npm run test:unit
 
+    # E2E tests only run on main branch (not PRs)
     - name: Install Playwright browsers
+      if: github.ref == 'refs/heads/main'
       working-directory: finance-tracker-tests
       run: npx playwright install --with-deps chromium
 
     - name: Run E2E tests
+      if: github.ref == 'refs/heads/main'
       working-directory: finance-tracker-tests
       run: npm run test:e2e
       env:

@@ -1,10 +1,12 @@
 name: Scheduled Regression Tests
 
 on:
-  # Run every day at 2 AM UTC
+  # Schedule: Change this cron to your preferred time
+  # Format: minute hour day month weekday (UTC timezone)
+  # Current: Every day at 2 AM UTC
   schedule:
     - cron: '0 2 * * *'
-  # Allow manual trigger
+  # Allow manual trigger anytime from GitHub Actions tab
   workflow_dispatch:
 
 jobs:

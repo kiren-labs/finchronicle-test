@@ -4,7 +4,9 @@
       "Bash(npm run test:e2e:*)",
       "Bash(npx playwright install)",
       "Bash(npm run test:unit:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
