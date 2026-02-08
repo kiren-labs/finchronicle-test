@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -7,6 +7,9 @@ const __dirname = dirname(__filename)
 
 const appJsPath = resolve(__dirname, '../../finance-tracker/app.js')
 const outputPath = resolve(__dirname, '../src/app.js')
+
+// Ensure src directory exists
+mkdirSync(dirname(outputPath), { recursive: true })
 
 console.log('📖 Reading app.js from:', appJsPath)
 
