@@ -7,11 +7,22 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 4 : undefined, // Parallel execution in CI
   reporter: 'html',
+  timeout: 60000, // 60s per test (default is 30s)
+  expect: {
+    timeout: 10000, // 10s for assertions (default is 5s)
+  },
 
   use: {
     baseURL: 'http://localhost:8000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Performance optimizations
+    actionTimeout: 10000, // Reduce from default 30s
+    navigationTimeout: 30000, // Reduce from default 60s
+    serviceWorkers: 'block', // Block service workers in tests
+    launchOptions: {
+      args: ['--disable-blink-features=AutomationControlled'],
+    },
   },
 
   projects: process.env.CI ? [
