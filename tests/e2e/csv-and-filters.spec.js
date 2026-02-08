@@ -5,6 +5,9 @@ test.describe('CSV Import/Export', () => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
+    // Wait for app to be fully loaded and interactive
+    await page.waitForLoadState('networkidle')
+    await page.locator('#add-tab').waitFor({ state: 'visible' })
   })
 
   test('should export transactions to CSV', async ({ page }) => {
@@ -275,6 +278,9 @@ test.describe('Groups and Analytics', () => {
     await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
+    // Wait for app to be fully loaded and interactive
+    await page.waitForLoadState('networkidle')
+    await page.locator('#add-tab').waitFor({ state: 'visible' })
   })
 
   test('should show grouped view by month', async ({ page }) => {

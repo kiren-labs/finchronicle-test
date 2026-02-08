@@ -6,6 +6,9 @@ test.describe('Transaction Management', () => {
     // Clear localStorage for fresh start
     await page.evaluate(() => localStorage.clear())
     await page.reload()
+    // Wait for app to be fully loaded and interactive
+    await page.waitForLoadState('networkidle')
+    await page.locator('#add-tab').waitFor({ state: 'visible' })
   })
 
   test('should add a new expense transaction', async ({ page }) => {

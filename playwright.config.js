@@ -19,6 +19,8 @@ export default defineConfig({
     // Performance optimizations
     actionTimeout: 15000, // Reasonable timeout for actions
     navigationTimeout: 30000,
+    // Disable service workers in tests to prevent interference
+    serviceWorkers: 'block',
   },
 
   projects: process.env.CI ? [
