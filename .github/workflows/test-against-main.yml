@@ -88,16 +88,6 @@ jobs:
       working-directory: finance-tracker-tests
       run: npm run test:unit
 
-    - name: Install Playwright browsers
-      working-directory: finance-tracker-tests
-      run: npx playwright install --with-deps chromium
-
-    - name: Run E2E tests
-      working-directory: finance-tracker-tests
-      run: npm run test:e2e
-      env:
-        CI: true
-
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
@@ -106,14 +96,6 @@ jobs:
         path: |
           finance-tracker-tests/test-results/
           finance-tracker-tests/test-metadata.json
-        retention-days: 30
-
-    - name: Upload Playwright report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: playwright-report-v${{ env.APP_VERSION }}
-        path: finance-tracker-tests/playwright-report/
         retention-days: 30
 
     - name: Comment on PR with results
@@ -132,7 +114,7 @@ jobs:
 
           ### Test Summary
           - ✅ Unit Tests: Passed
-          - ✅ E2E Tests: Passed
+          - ⏭️ E2E Tests: Not run (manual)
 
           All tests completed successfully against main app version \`v${version}\`.
 
@@ -161,4 +143,4 @@ jobs:
         cat test-metadata.json >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "✅ All tests completed successfully" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All selected tests completed successfully" >> $GITHUB_STEP_SUMMARY

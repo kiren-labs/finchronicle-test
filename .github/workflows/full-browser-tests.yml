@@ -1,16 +1,7 @@
 name: Full Browser Coverage Tests
 
 on:
-  # Schedule: Change this cron to your preferred time
-  # Format: minute hour day month weekday (UTC timezone)
-  # Examples:
-  #   '0 3 * * 0'  = Sundays at 3 AM UTC (current)
-  #   '0 2 * * *'  = Every day at 2 AM UTC
-  #   '0 14 * * 1' = Mondays at 2 PM UTC
-  #   '0 0 1 * *'  = First day of each month at midnight
-  schedule:
-    - cron: '0 3 * * 0'  # Weekly on Sundays at 3 AM UTC
-  # Allow manual trigger anytime from GitHub Actions tab
+  # Manual trigger only to control cost
   workflow_dispatch:
     inputs:
       app_branch:
