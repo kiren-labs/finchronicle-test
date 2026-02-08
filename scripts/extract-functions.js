@@ -38,6 +38,9 @@ const functions = [
   'getMonthTotals',
   'calculateMoMDelta',
   'calculateExpensePercentage',
+  // v3.9.0+ backup tracking functions
+  'getDaysSinceBackup',
+  'shouldShowBackupReminder',
 ]
 
 // Build testable module
