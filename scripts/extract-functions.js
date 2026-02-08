@@ -103,6 +103,10 @@ functions.forEach((fnName) => {
 
 // Mock localStorage for functions that use it
 moduleContent += `
+// Global variables for backup functions (v3.9.0+)
+let lastBackupTimestamp = null
+let transactions = []
+
 // Mock localStorage for testing environment
 if (typeof localStorage === 'undefined') {
   global.localStorage = {
@@ -111,6 +115,9 @@ if (typeof localStorage === 'undefined') {
     clear: () => {},
   }
 }
+
+// Export global variable accessors for testing
+export { lastBackupTimestamp, transactions }
 `
 
 // Write to src/app.js
