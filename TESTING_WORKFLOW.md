@@ -2,11 +2,11 @@
 
 ## Overview
 
-Your test suite uses **Option 4: Optimized Multi-Tier Strategy**
+Your test suite uses a **Simple, Reliable Strategy**
 
-- ⚡ **Fast PRs**: Unit tests only (~1 sec)
-- 🛡️ **Protected Main**: Full tests on merge (~3 min)
+- 🛡️ **Every PR/Push**: Full tests (Unit + E2E, ~3-4 min)
 - 📅 **Scheduled**: Comprehensive browser tests (configurable)
+- ✅ **Simple**: Same tests everywhere, easy to understand
 
 ---
 
@@ -22,7 +22,8 @@ git push origin feature/my-feature
 
 **What runs in CI:**
 - ✅ Unit tests (76 tests, ~1 second)
-- ⏭️ E2E tests skipped (fast feedback)
+- ✅ E2E tests (20 tests, ~2-3 minutes)
+- Total: ~3-4 minutes
 
 ---
 
@@ -34,7 +35,9 @@ gh pr create --title "Add feature"
 
 **What runs in CI:**
 - ✅ Unit tests (76 tests, ~1 second)
-- ⏭️ E2E tests skipped (fast PR checks)
+- ✅ E2E tests (20 tests, ~2-3 minutes)
+- Chromium only for speed
+- Catches bugs before merge
 
 ---
 
@@ -46,10 +49,8 @@ gh pr merge --merge
 ```
 
 **What runs in CI:**
-- ✅ Unit tests (76 tests, ~1 second)
-- ✅ E2E tests (20 tests, ~2-3 minutes)
-- Chromium only for speed
-- Protects main branch automatically
+- Same as PR: Unit + E2E tests
+- Already validated, so merge is safe
 
 ---
 
@@ -171,45 +172,43 @@ open test-results/
 
 ## CI/CD Cost Estimation
 
-### Current Setup (Option 4)
+### Current Setup (Simple & Reliable)
 
 | Event | Frequency | Tests Run | Time | Cost/Month |
 |-------|-----------|-----------|------|------------|
-| PR creation | ~10/month | Unit only | 1 sec | ~0 min |
-| Merge to main | ~10/month | Unit + E2E | 3 min | ~30 min |
+| Push to branches | ~20/month | Unit + E2E | 3 min | ~60 min |
+| PR checks | ~10/month | Unit + E2E | 3 min | ~30 min |
 | Daily regression | 30/month | Unit + E2E | 3 min | ~90 min |
 | Weekly full browser | 4/month | All browsers | 10 min | ~40 min |
-| **Total** | | | | **~160 min/month** |
+| **Total** | | | | **~220 min/month** |
 
 **GitHub Free Tier:** 2,000 minutes/month
-**Usage:** ~8% of free tier ✅
+**Usage:** ~11% of free tier ✅ Still very low!
 
 ---
 
 ## Troubleshooting
 
-### PR tests pass, but main branch tests fail
-
-This is expected! E2E tests only run on main branch.
+### Tests failed in CI
 
 **Solution:**
-1. Run E2E tests locally: `npm run test:e2e`
-2. Fix issues
-3. Push fix to main
+1. Check the CI logs for specific errors
+2. Run tests locally: `npm run test:e2e`
+3. Fix the issues
+4. Push the fix - CI will re-run automatically
 
-### I want to run E2E tests before merging
+### I want to run tests manually before pushing
 
-**Option 1:** Run locally
+**Run all tests locally:**
 ```bash
-npm run test:e2e  # Test before pushing
+npm test  # Runs unit + integration + E2E
 ```
 
-**Option 2:** Manually trigger workflow
-1. GitHub → Actions → "Test Against Main App"
-2. "Run workflow" on your branch
-
-**Option 3:** Temporarily edit workflow to run on PRs
-(Not recommended - defeats the purpose of fast PRs)
+**Or run individually:**
+```bash
+npm run test:unit      # Fast (1 sec)
+npm run test:e2e       # Slower (3 min)
+```
 
 ### Scheduled tests aren't running
 
@@ -239,15 +238,16 @@ Check:
 
 ## Summary
 
-**Fast Development:**
-- Feature branches: Unit tests only (1 sec)
-- Pull requests: Unit tests only (1 sec)
+**Simple & Reliable:**
+- Every push/PR: Full tests (3-4 min)
+- Same tests everywhere: No confusion
+- High confidence: All bugs caught before merge
 
 **Quality Assurance:**
-- Main branch: Full tests (3 min)
-- Scheduled: Comprehensive browser tests
+- Scheduled: Comprehensive browser tests (weekly)
+- Daily regression: Against latest main
 
 **Manual Control:**
-- Run E2E locally anytime
+- Run tests locally anytime
 - Trigger scheduled tests from GitHub UI
 - Customize schedules via cron expressions
