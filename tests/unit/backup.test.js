@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { getDaysSinceBackup, shouldShowBackupReminder } from '../../src/app.js'
 
 // Note: getDaysSinceBackup and shouldShowBackupReminder rely on module-level
 // variables (lastBackupTimestamp, transactions) which are defined in the main app.
@@ -311,6 +312,36 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       // ~26 years = ~9500 days
       expect(days).toBeGreaterThan(9000)
       expect(days).toBeLessThan(10000)
+    })
+  })
+
+  describe('getDaysSinceBackup - Function Tests', () => {
+    it('should return null when lastBackupTimestamp is not set', () => {
+      // Since lastBackupTimestamp is null in the module, this tests the actual function
+      const result = getDaysSinceBackup()
+      expect(result).toBeNull()
+    })
+
+    it('should be callable and return a value', () => {
+      // This ensures the function is exported and callable
+      expect(typeof getDaysSinceBackup).toBe('function')
+      const result = getDaysSinceBackup()
+      expect(result === null || typeof result === 'number').toBe(true)
+    })
+  })
+
+  describe('shouldShowBackupReminder - Function Tests', () => {
+    it('should return false when no backup and no transactions', () => {
+      // Tests the actual function with module's default state
+      const result = shouldShowBackupReminder()
+      expect(typeof result).toBe('boolean')
+      expect(result).toBe(false)
+    })
+
+    it('should be callable and return boolean', () => {
+      expect(typeof shouldShowBackupReminder).toBe('function')
+      const result = shouldShowBackupReminder()
+      expect(typeof result).toBe('boolean')
     })
   })
 })

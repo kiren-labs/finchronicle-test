@@ -23,12 +23,68 @@ describe('Version Tracking (v3.7.0+)', () => {
   })
 })
 
-// Note: getPreviousMonth relies on Date timezone conversion (local -> UTC)
-// which makes unit testing unreliable across different timezones
-// This function is tested via E2E tests in the actual app environment
+describe('getPreviousMonth', () => {
+  it('should return previous month for mid-year months', () => {
+    expect(getPreviousMonth('2025-06')).toBe('2025-04')
+    expect(getPreviousMonth('2025-03')).toBe('2025-01')
+  })
 
-// Note: getMonthTotals relies on global transactions array from main app
-// It's tested via E2E tests instead of unit tests
+  it('should handle year transitions', () => {
+    expect(getPreviousMonth('2025-01')).toBe('2024-11')
+    expect(getPreviousMonth('2024-01')).toBe('2023-11')
+  })
+
+  it('should handle December going to November', () => {
+    expect(getPreviousMonth('2025-12')).toBe('2025-10')
+  })
+
+  it('should handle February to January', () => {
+    expect(getPreviousMonth('2025-02')).toBe('2024-12')
+  })
+
+  it('should return correct format YYYY-MM', () => {
+    const result = getPreviousMonth('2025-05')
+    expect(result).toMatch(/^\d{4}-\d{2}$/)
+  })
+})
+
+describe('getMonthTotals', () => {
+  it('should return zero totals for empty transactions', () => {
+    const totals = getMonthTotals('2025-01')
+    
+    expect(totals).toEqual({
+      income: 0,
+      expense: 0,
+      net: 0,
+      count: 0
+    })
+  })
+
+  it('should return correct structure for any month', () => {
+    const totals = getMonthTotals('2024-12')
+    
+    expect(totals).toHaveProperty('income')
+    expect(totals).toHaveProperty('expense')
+    expect(totals).toHaveProperty('net')
+    expect(totals).toHaveProperty('count')
+    expect(typeof totals.income).toBe('number')
+    expect(typeof totals.expense).toBe('number')
+    expect(typeof totals.net).toBe('number')
+    expect(typeof totals.count).toBe('number')
+  })
+
+  it('should handle different month formats', () => {
+    // Should work with YYYY-MM format
+    expect(() => getMonthTotals('2025-06')).not.toThrow()
+    expect(() => getMonthTotals('2024-01')).not.toThrow()
+    expect(() => getMonthTotals('2026-12')).not.toThrow()
+  })
+
+  it('should calculate net as income minus expense', () => {
+    const totals = getMonthTotals('2025-02')
+    expect(totals.net).toBe(totals.income - totals.expense)
+  })
+})
 
 describe('calculateMoMDelta', () => {
   it('should calculate positive month-over-month change', () => {

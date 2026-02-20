@@ -1,9 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   formatCurrency,
   formatNumber,
   formatDate,
   formatMonth,
+  getCurrency,
+  getCurrencySymbol,
 } from '../../src/app.js'
 
 describe('formatNumber', () => {
@@ -88,5 +90,81 @@ describe('formatMonth', () => {
 
   it('should handle different years', () => {
     expect(formatMonth('2024-06')).toMatch(/June 2024/)
+  })
+})
+
+describe('getCurrency', () => {
+  let originalGetItem
+
+  beforeEach(() => {
+    // Save original localStorage.getItem
+    originalGetItem = global.localStorage.getItem
+  })
+
+  afterEach(() => {
+    // Restore original localStorage.getItem
+    global.localStorage.getItem = originalGetItem
+  })
+
+  it('should return default currency INR when nothing is saved', () => {
+    global.localStorage.getItem = vi.fn(() => null)
+    expect(getCurrency()).toBe('INR')
+  })
+
+  it('should return saved currency from localStorage', () => {
+    global.localStorage.getItem = vi.fn(() => 'USD')
+    expect(getCurrency()).toBe('USD')
+  })
+
+  it('should return saved currency for EUR', () => {
+    global.localStorage.getItem = vi.fn(() => 'EUR')
+    expect(getCurrency()).toBe('EUR')
+  })
+
+  it('should return INR for invalid currency code', () => {
+    global.localStorage.getItem = vi.fn(() => 'INVALID')
+    expect(getCurrency()).toBe('INR')
+  })
+
+  it('should handle empty string from localStorage', () => {
+    global.localStorage.getItem = vi.fn(() => '')
+    expect(getCurrency()).toBe('INR')
+  })
+})
+
+describe('getCurrencySymbol', () => {
+  let originalGetItem
+
+  beforeEach(() => {
+    originalGetItem = global.localStorage.getItem
+  })
+
+  afterEach(() => {
+    global.localStorage.getItem = originalGetItem
+  })
+
+  it('should return correct symbol for INR', () => {
+    global.localStorage.getItem = vi.fn(() => 'INR')
+    expect(getCurrencySymbol()).toBe('₹')
+  })
+
+  it('should return correct symbol for USD', () => {
+    global.localStorage.getItem = vi.fn(() => 'USD')
+    expect(getCurrencySymbol()).toBe('$')
+  })
+
+  it('should return correct symbol for EUR', () => {
+    global.localStorage.getItem = vi.fn(() => 'EUR')
+    expect(getCurrencySymbol()).toBe('€')
+  })
+
+  it('should return correct symbol for GBP', () => {
+    global.localStorage.getItem = vi.fn(() => 'GBP')
+    expect(getCurrencySymbol()).toBe('£')
+  })
+
+  it('should return INR symbol when no currency saved', () => {
+    global.localStorage.getItem = vi.fn(() => null)
+    expect(getCurrencySymbol()).toBe('₹')
   })
 })
