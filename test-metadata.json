@@ -1,7 +1,7 @@
 {
-  "appVersion": "3.9.0",
-  "testedAt": "2026-02-08T05:43:06.438Z",
-  "extractedFunctions": 17,
-  "totalFunctions": 17,
+  "appVersion": "3.10.2",
+  "testedAt": "2026-02-20T16:29:07.305Z",
+  "extractedFunctions": 19,
+  "totalFunctions": 19,
   "success": true
 }

@@ -41,6 +41,9 @@ const functions = [
   // v3.9.0+ backup tracking functions
   'getDaysSinceBackup',
   'shouldShowBackupReminder',
+  // v3.10.2+ validation functions
+  'sanitizeHTML',
+  'validateTransaction',
 ]
 
 // Build testable module
