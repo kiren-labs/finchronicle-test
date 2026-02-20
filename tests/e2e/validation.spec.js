@@ -23,7 +23,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.waitForSelector('.success-message:has-text("Amount must be a positive number")', { state: 'visible', timeout: 5000 })
 
     // Transaction should not be saved
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
     await expect(page.locator('.transaction-item')).toHaveCount(0)
   })
 
@@ -157,7 +157,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.waitForTimeout(2500)
 
     // Go to list and check notes are sanitized
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
 
     const notesElement = page.locator('.transaction-note')
     await expect(notesElement).toBeVisible()
@@ -186,7 +186,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.waitForTimeout(2500)
 
     // Verify in list
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
     await expect(page.locator('.transaction-item')).toHaveCount(1)
   })
 
@@ -274,7 +274,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.waitForTimeout(2500)
 
     // Verify notes are preserved correctly
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
     const displayedNotes = await page.locator('.transaction-note').textContent()
     expect(displayedNotes).toContain('restaurant')
     expect(displayedNotes).toContain('café')

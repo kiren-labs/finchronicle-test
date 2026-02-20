@@ -28,8 +28,8 @@ test.describe('CSV Import/Export', () => {
     // Wait for success message to ensure UI is stable
     await page.waitForSelector('.success-message', { state: 'visible' })
 
-    // Go to settings (works for both top tabs and bottom nav)
-    await page.click('[aria-controls="settingsTab"]')
+    // Go to settings tab
+    await page.click('#settings-tab')
 
     // Click export and wait for download
     const downloadPromise = page.waitForEvent('download')
@@ -44,7 +44,7 @@ test.describe('CSV Import/Export', () => {
   })
 
   test('should import transactions from CSV', async ({ page }) => {
-    await page.click('[aria-controls="settingsTab"]')
+    await page.click('#settings-tab')
 
     // Prepare CSV content
     const csvContent = `Date,Type,Category,Amount (INR),Notes
@@ -64,12 +64,12 @@ test.describe('CSV Import/Export', () => {
     await expect(page.locator('.success-message')).toContainText('Imported 3 transaction')
 
     // Verify in list
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
     await expect(page.locator('.transaction-item')).toHaveCount(3)
   })
 
   test('should handle CSV import with various date formats', async ({ page }) => {
-    await page.click('[aria-controls="settingsTab"]')
+    await page.click('#settings-tab')
 
     const csvContent = `Date,Type,Category,Amount,Notes
 2025-02-01,expense,Food,100,YYYY-MM-DD format
@@ -86,12 +86,12 @@ test.describe('CSV Import/Export', () => {
     // All should be imported successfully
     await expect(page.locator('.success-message')).toContainText('Imported 3 transaction')
 
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
     await expect(page.locator('.transaction-item')).toHaveCount(3)
   })
 
   test('should skip invalid rows during CSV import', async ({ page }) => {
-    await page.click('[aria-controls="settingsTab"]')
+    await page.click('#settings-tab')
 
     const csvContent = `Date,Type,Category,Amount,Notes
 2025-02-01,expense,Food,1000,Valid row
@@ -110,7 +110,7 @@ invalid-date,expense,Food,500,Invalid date
     await expect(page.locator('.success-message')).toContainText('Imported 2 transaction')
     await expect(page.locator('.success-message')).toContainText('Skipped 2')
 
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
     await expect(page.locator('.transaction-item')).toHaveCount(2)
   })
 })
@@ -144,7 +144,7 @@ test.describe('Filters and Pagination', () => {
   })
 
   test('should filter transactions by month', async ({ page }) => {
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
 
     // Should show all transactions initially
     await expect(page.locator('.transaction-item')).toHaveCount(5)
@@ -171,7 +171,7 @@ test.describe('Filters and Pagination', () => {
   })
 
   test('should filter transactions by category', async ({ page }) => {
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
 
     // Should show all transactions
     await expect(page.locator('.transaction-item')).toHaveCount(5)
@@ -198,7 +198,7 @@ test.describe('Filters and Pagination', () => {
   })
 
   test('should combine month and category filters', async ({ page }) => {
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
 
     // Filter by February
     await page.click('button:has-text("February 2025")')
@@ -222,7 +222,7 @@ test.describe('Filters and Pagination', () => {
       await page.click('#submitBtn')
     }
 
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
 
     // Pagination controls should be visible
     await expect(page.locator('#paginationControls')).toBeVisible()
@@ -266,7 +266,7 @@ test.describe('Filters and Pagination', () => {
       await page.click('#submitBtn')
     }
 
-    await page.click('[aria-controls="listTab"]')
+    await page.click('#list-tab')
 
     // Go to page 2
     await page.click('#nextBtn')
@@ -305,7 +305,7 @@ test.describe('Groups and Analytics', () => {
     await page.click('#submitBtn')
 
     // Go to Groups tab
-    await page.click('[aria-controls="groupsTab"]')
+    await page.click('#groups-tab')
 
     // Should show "By Month" view by default
     await expect(page.locator('button:has-text("By Month")')).toHaveClass(/active/)
@@ -335,7 +335,7 @@ test.describe('Groups and Analytics', () => {
     await page.click('#submitBtn')
 
     // Go to Groups tab
-    await page.click('[aria-controls="groupsTab"]')
+    await page.click('#groups-tab')
 
     // Switch to "By Category"
     await page.click('button:has-text("By Category")')
