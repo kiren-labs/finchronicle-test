@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { navigateToTab } from './helpers.js'
 
 test.describe('Transaction Management', () => {
   test.beforeEach(async ({ page }) => {
@@ -33,7 +34,7 @@ test.describe('Transaction Management', () => {
     await expect(page.locator('.success-message')).toHaveText('Transaction saved!')
 
     // Switch to List tab
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Verify transaction appears in list
     await expect(page.locator('.transaction-item')).toHaveCount(1)
@@ -60,7 +61,7 @@ test.describe('Transaction Management', () => {
     await expect(page.locator('.success-message')).toHaveText('Transaction saved!')
 
     // Go to list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Verify income transaction
     await expect(page.locator('.transaction-item')).toHaveCount(1)
@@ -77,8 +78,11 @@ test.describe('Transaction Management', () => {
     await page.fill('#notes', 'Taxi to airport')
     await page.click('#submitBtn')
 
+    // Wait for success message
+    await expect(page.locator('.success-message')).toBeVisible()
+
     // Go to list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-item')).toHaveCount(1)
 
     // Click edit button
@@ -104,7 +108,7 @@ test.describe('Transaction Management', () => {
     await expect(page.locator('.success-message')).toHaveText('Transaction updated!')
 
     // Check updated values in list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-amount')).toContainText('600')
     await expect(page.locator('.transaction-note')).toHaveText('Taxi to airport - updated')
   })
@@ -116,8 +120,11 @@ test.describe('Transaction Management', () => {
     await page.fill('#date', '2025-02-01')
     await page.click('#submitBtn')
 
+    // Wait for success message
+    await expect(page.locator('.success-message')).toBeVisible()
+
     // Edit transaction
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await page.click('.edit-btn')
 
     // Verify we're in edit mode
@@ -140,8 +147,11 @@ test.describe('Transaction Management', () => {
     await page.fill('#date', '2025-02-01')
     await page.click('#submitBtn')
 
+    // Wait for success message
+    await expect(page.locator('.success-message')).toBeVisible()
+
     // Go to list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-item')).toHaveCount(1)
 
     // Click delete
@@ -167,8 +177,11 @@ test.describe('Transaction Management', () => {
     await page.fill('#date', '2025-02-01')
     await page.click('#submitBtn')
 
+    // Wait for success message
+    await expect(page.locator('.success-message')).toBeVisible()
+
     // Go to list and try to delete
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await page.click('.delete-btn')
 
     // Modal should appear
@@ -224,9 +237,10 @@ test.describe('Transaction Management', () => {
 
     // Reload page
     await page.reload()
+    await page.waitForLoadState('networkidle')
 
     // Go to list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Data should still be there
     await expect(page.locator('.transaction-item')).toHaveCount(1)
@@ -247,7 +261,7 @@ test.describe('Transaction Management', () => {
     await expect(page.locator('.success-message')).toBeVisible()
 
     // Go to list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Transaction should exist
     await expect(page.locator('.transaction-item')).toHaveCount(1)

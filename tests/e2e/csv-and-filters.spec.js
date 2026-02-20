@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { navigateToTab, addTransaction } from './helpers.js'
 
 test.describe('CSV Import/Export', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,23 +14,22 @@ test.describe('CSV Import/Export', () => {
 
   test('should export transactions to CSV', async ({ page }) => {
     // Add some transactions
-    await page.fill('#amount', '1000')
-    await page.selectOption('#category', 'Food')
-    await page.fill('#date', '2025-02-01')
-    await page.fill('#notes', 'Dinner')
-    await page.click('#submitBtn')
+    await addTransaction(page, {
+      amount: '1000',
+      category: 'Food',
+      date: '2025-02-01',
+      notes: 'Dinner'
+    })
 
-    await page.fill('#amount', '500')
-    await page.selectOption('#category', 'Transport')
-    await page.fill('#date', '2025-02-01')
-    await page.fill('#notes', 'Taxi')
-    await page.click('#submitBtn')
-
-    // Wait for success message to ensure UI is stable
-    await page.waitForSelector('.success-message', { state: 'visible' })
+    await addTransaction(page, {
+      amount: '500',
+      category: 'Transport',
+      date: '2025-02-01',
+      notes: 'Taxi'
+    })
 
     // Go to settings tab
-    await page.click('#settings-tab')
+    await navigateToTab(page, 'settingsTab')
 
     // Click export and wait for download
     const downloadPromise = page.waitForEvent('download')
@@ -44,7 +44,7 @@ test.describe('CSV Import/Export', () => {
   })
 
   test('should import transactions from CSV', async ({ page }) => {
-    await page.click('#settings-tab')
+    await navigateToTab(page, 'settingsTab')
 
     // Prepare CSV content
     const csvContent = `Date,Type,Category,Amount (INR),Notes
@@ -64,12 +64,12 @@ test.describe('CSV Import/Export', () => {
     await expect(page.locator('.success-message')).toContainText('Imported 3 transaction')
 
     // Verify in list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-item')).toHaveCount(3)
   })
 
   test('should handle CSV import with various date formats', async ({ page }) => {
-    await page.click('#settings-tab')
+    await navigateToTab(page, 'settingsTab')
 
     const csvContent = `Date,Type,Category,Amount,Notes
 2025-02-01,expense,Food,100,YYYY-MM-DD format
@@ -86,12 +86,12 @@ test.describe('CSV Import/Export', () => {
     // All should be imported successfully
     await expect(page.locator('.success-message')).toContainText('Imported 3 transaction')
 
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-item')).toHaveCount(3)
   })
 
   test('should skip invalid rows during CSV import', async ({ page }) => {
-    await page.click('#settings-tab')
+    await navigateToTab(page, 'settingsTab')
 
     const csvContent = `Date,Type,Category,Amount,Notes
 2025-02-01,expense,Food,1000,Valid row
@@ -110,7 +110,7 @@ invalid-date,expense,Food,500,Invalid date
     await expect(page.locator('.success-message')).toContainText('Imported 2 transaction')
     await expect(page.locator('.success-message')).toContainText('Skipped 2')
 
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-item')).toHaveCount(2)
   })
 })
@@ -134,17 +134,13 @@ test.describe('Filters and Pagination', () => {
     ]
 
     for (const tx of transactions) {
-      await page.fill('#amount', tx.amount)
-      await page.selectOption('#category', tx.category)
-      await page.fill('#date', tx.date)
-      await page.fill('#notes', tx.notes)
-      await page.click('#submitBtn')
+      await addTransaction(page, tx, false) // Don't wait for success message each time
       await page.waitForTimeout(100) // Small delay between transactions
     }
   })
 
   test('should filter transactions by month', async ({ page }) => {
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Should show all transactions initially
     await expect(page.locator('.transaction-item')).toHaveCount(5)
@@ -171,7 +167,7 @@ test.describe('Filters and Pagination', () => {
   })
 
   test('should filter transactions by category', async ({ page }) => {
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Should show all transactions
     await expect(page.locator('.transaction-item')).toHaveCount(5)
@@ -198,7 +194,7 @@ test.describe('Filters and Pagination', () => {
   })
 
   test('should combine month and category filters', async ({ page }) => {
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Filter by February
     await page.click('button:has-text("February 2025")')
@@ -215,14 +211,15 @@ test.describe('Filters and Pagination', () => {
   test('should show pagination controls when more than 20 items', async ({ page }) => {
     // Add 25 transactions
     for (let i = 1; i <= 25; i++) {
-      await page.fill('#amount', '100')
-      await page.selectOption('#category', 'Food')
-      await page.fill('#date', '2025-02-01')
-      await page.fill('#notes', `Transaction ${i}`)
-      await page.click('#submitBtn')
+      await addTransaction(page, {
+        amount: '100',
+        category: 'Food',
+        date: '2025-02-01',
+        notes: `Transaction ${i}`
+      }, false)
     }
 
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Pagination controls should be visible
     await expect(page.locator('#paginationControls')).toBeVisible()
@@ -260,13 +257,14 @@ test.describe('Filters and Pagination', () => {
   test('should reset to page 1 when filters change', async ({ page }) => {
     // Add 25 transactions to trigger pagination
     for (let i = 1; i <= 20; i++) {
-      await page.fill('#amount', '100')
-      await page.selectOption('#category', 'Food')
-      await page.fill('#date', '2025-02-01')
-      await page.click('#submitBtn')
+      await addTransaction(page, {
+        amount: '100',
+        category: 'Food',
+        date: '2025-02-01'
+      }, false)
     }
 
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     // Go to page 2
     await page.click('#nextBtn')
@@ -293,19 +291,21 @@ test.describe('Groups and Analytics', () => {
 
   test('should show grouped view by month', async ({ page }) => {
     // Add transactions
-    await page.fill('#amount', '1000')
-    await page.selectOption('#category', 'Food')
-    await page.fill('#date', '2025-02-15')
-    await page.click('#submitBtn')
+    await addTransaction(page, {
+      amount: '1000',
+      category: 'Food',
+      date: '2025-02-15'
+    })
 
-    await page.fill('#amount', '2000')
-    await page.click('[data-type="income"]')
-    await page.selectOption('#category', 'Salary')
-    await page.fill('#date', '2025-02-10')
-    await page.click('#submitBtn')
+    await addTransaction(page, {
+      amount: '2000',
+      category: 'Salary',
+      type: 'income',
+      date: '2025-02-10'
+    })
 
     // Go to Groups tab
-    await page.click('#groups-tab')
+    await navigateToTab(page, 'groupsTab')
 
     // Should show "By Month" view by default
     await expect(page.locator('button:has-text("By Month")')).toHaveClass(/active/)
@@ -324,18 +324,20 @@ test.describe('Groups and Analytics', () => {
 
   test('should show grouped view by category', async ({ page }) => {
     // Add multiple transactions in same category
-    await page.fill('#amount', '500')
-    await page.selectOption('#category', 'Food')
-    await page.fill('#date', '2025-02-15')
-    await page.click('#submitBtn')
+    await addTransaction(page, {
+      amount: '500',
+      category: 'Food',
+      date: '2025-02-15'
+    })
 
-    await page.fill('#amount', '300')
-    await page.selectOption('#category', 'Food')
-    await page.fill('#date', '2025-02-10')
-    await page.click('#submitBtn')
+    await addTransaction(page, {
+      amount: '300',
+      category: 'Food',
+      date: '2025-02-10'
+    })
 
     // Go to Groups tab
-    await page.click('#groups-tab')
+    await navigateToTab(page, 'groupsTab')
 
     // Switch to "By Category"
     await page.click('button:has-text("By Category")')

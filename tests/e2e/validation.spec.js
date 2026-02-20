@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { navigateToTab } from './helpers.js'
 
 test.describe('Transaction Validation (v3.10.2)', () => {
   test.beforeEach(async ({ page }) => {
@@ -23,7 +24,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.waitForSelector('.success-message:has-text("Amount must be a positive number")', { state: 'visible', timeout: 5000 })
 
     // Transaction should not be saved
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-item')).toHaveCount(0)
   })
 
@@ -153,11 +154,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await expect(page.locator('.success-message.show')).toBeVisible()
     await expect(page.locator('.success-message')).toContainText('Transaction saved!')
 
-    // Wait for success message to disappear before navigating
-    await page.waitForTimeout(2500)
-
     // Go to list and check notes are sanitized
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
 
     const notesElement = page.locator('.transaction-note')
     await expect(notesElement).toBeVisible()
@@ -182,11 +180,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await expect(page.locator('.success-message.show')).toBeVisible()
     await expect(page.locator('.success-message')).toContainText('Transaction saved!')
 
-    // Wait for success message animation before navigating
-    await page.waitForTimeout(2500)
-
     // Verify in list
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     await expect(page.locator('.transaction-item')).toHaveCount(1)
   })
 
@@ -270,11 +265,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await expect(page.locator('.success-message.show')).toBeVisible()
     await expect(page.locator('.success-message')).toContainText('Transaction saved!')
 
-    // Wait for success message animation before navigating
-    await page.waitForTimeout(2500)
-
     // Verify notes are preserved correctly
-    await page.click('#list-tab')
+    await navigateToTab(page, 'listTab')
     const displayedNotes = await page.locator('.transaction-note').textContent()
     expect(displayedNotes).toContain('restaurant')
     expect(displayedNotes).toContain('café')
