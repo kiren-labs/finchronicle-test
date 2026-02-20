@@ -20,8 +20,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.click('#submitBtn')
 
     // Should show error message
-    await expect(page.locator('.message')).toBeVisible()
-    await expect(page.locator('.message')).toContainText('Amount must be a positive number')
+    await page.waitForSelector('.success-message:has-text("Amount must be a positive number")', { state: 'visible', timeout: 5000 })
 
     // Transaction should not be saved
     await page.click('[aria-controls="listTab"]')
@@ -36,8 +35,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.message')).toBeVisible()
-    await expect(page.locator('.message')).toContainText('Amount must be a positive number')
+    await expect(page.locator('.success-message.show')).toBeVisible()
+    await expect(page.locator('.success-message')).toContainText('Amount must be a positive number')
   })
 
   test('should reject amounts exceeding maximum limit', async ({ page }) => {
@@ -48,8 +47,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.message')).toBeVisible()
-    await expect(page.locator('.message')).toContainText('Amount exceeds maximum limit')
+    await expect(page.locator('.success-message.show')).toBeVisible()
+    await expect(page.locator('.success-message')).toContainText('Amount exceeds maximum limit')
   })
 
   test('should accept maximum allowed amount', async ({ page }) => {
@@ -76,8 +75,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.message')).toBeVisible()
-    await expect(page.locator('.message')).toContainText('Future dates are not allowed')
+    await expect(page.locator('.success-message.show')).toBeVisible()
+    await expect(page.locator('.success-message')).toContainText('Future dates are not allowed')
   })
 
   test('should reject dates before 1900', async ({ page }) => {
@@ -88,8 +87,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.message')).toBeVisible()
-    await expect(page.locator('.message')).toContainText('Date is too far in the past')
+    await expect(page.locator('.success-message.show')).toBeVisible()
+    await expect(page.locator('.success-message')).toContainText('Date is too far in the past')
   })
 
   test('should accept valid historical date', async ({ page }) => {
@@ -126,8 +125,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.message')).toBeVisible()
-    await expect(page.locator('.message')).toContainText('Notes too long')
+    await expect(page.locator('.success-message.show')).toBeVisible()
+    await expect(page.locator('.success-message')).toContainText('Notes too long')
   })
 
   test('should accept notes at maximum length (500 characters)', async ({ page }) => {
@@ -151,7 +150,11 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
+    await expect(page.locator('.success-message.show')).toBeVisible()
     await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+
+    // Wait for success message to disappear before navigating
+    await page.waitForTimeout(2500)
 
     // Go to list and check notes are sanitized
     await page.click('[aria-controls="listTab"]')
@@ -176,7 +179,11 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
+    await expect(page.locator('.success-message.show')).toBeVisible()
     await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+
+    // Wait for success message animation before navigating
+    await page.waitForTimeout(2500)
 
     // Verify in list
     await page.click('[aria-controls="listTab"]')
@@ -225,7 +232,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.click('#submitBtn')
 
     // Should show at least one error message
-    await expect(page.locator('.message')).toBeVisible()
+    await expect(page.locator('.success-message.show')).toBeVisible()
   })
 
   test('should accept empty notes', async ({ page }) => {
@@ -260,7 +267,11 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     await page.click('#submitBtn')
 
+    await expect(page.locator('.success-message.show')).toBeVisible()
     await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+
+    // Wait for success message animation before navigating
+    await page.waitForTimeout(2500)
 
     // Verify notes are preserved correctly
     await page.click('[aria-controls="listTab"]')

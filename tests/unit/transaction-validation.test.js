@@ -42,6 +42,67 @@ describe('sanitizeHTML', () => {
       expect(result.length).toBeGreaterThan(0)
     })
   })
+
+  it('should handle falsy values', () => {
+    expect(sanitizeHTML(false)).toBe('')
+    expect(sanitizeHTML(0)).toBe('')
+    expect(sanitizeHTML(NaN)).toBe('')
+  })
+
+  it('should handle whitespace-only strings', () => {
+    const result = sanitizeHTML('   ')
+    expect(typeof result).toBe('string')
+  })
+
+  it('should handle very long strings', () => {
+    const longString = 'a'.repeat(1000)
+    const result = sanitizeHTML(longString)
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('should handle special characters', () => {
+    const inputs = [
+      'Test @ symbol',
+      'Test # hashtag',
+      'Test $ dollar',
+      'Test % percent',
+      'Test ^ caret',
+      'Test * asterisk',
+      'Test ( parenthesis )',
+      'Test [ bracket ]',
+      'Test { brace }',
+      'Test | pipe',
+      'Test \\ backslash',
+      'Test / slash',
+      'Test ? question',
+      'Test ! exclamation'
+    ]
+    inputs.forEach(input => {
+      const result = sanitizeHTML(input)
+      expect(typeof result).toBe('string')
+    })
+  })
+
+  it('should handle unicode characters', () => {
+    const inputs = [
+      'café',
+      '日本語',
+      'emoji 🎉',
+      '汉字',
+      'Ñoño'
+    ]
+    inputs.forEach(input => {
+      const result = sanitizeHTML(input)
+      expect(typeof result).toBe('string')
+      expect(result.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('should handle newlines and tabs', () => {
+    const result = sanitizeHTML('Line 1\nLine 2\tTabbed')
+    expect(typeof result).toBe('string')
+  })
 })
 
 describe('validateTransaction - Type Validation', () => {
@@ -571,5 +632,242 @@ describe('validateTransaction - Edge Cases', () => {
     }
     const result = validateTransaction(transaction)
     expect(result.valid).toBe(true)
+  })
+
+  it('should handle amount exactly at zero boundary', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 0.001,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(true)
+  })
+
+  it('should reject amount just over maximum', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 999999999.01,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContainEqual({
+      field: 'amount',
+      message: 'Amount exceeds maximum limit'
+    })
+  })
+})
+
+describe('validateTransaction - Comprehensive Branch Coverage', () => {
+  it('should validate transaction with both NaN amount and invalid type', () => {
+    const transaction = {
+      type: 'other',
+      amount: NaN,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(false)
+    expect(result.errors.length).toBeGreaterThanOrEqual(2)
+    expect(result.errors.some(e => e.field === 'type')).toBe(true)
+    expect(result.errors.some(e => e.field === 'amount')).toBe(true)
+  })
+
+  it('should validate transaction with zero amount and invalid category', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 0,
+      category: 'InvalidCategory',
+      date: '2026-02-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.field === 'amount')).toBe(true)
+    expect(result.errors.some(e => e.field === 'category')).toBe(true)
+  })
+
+  it('should validate transaction with negative amount exceeding max', () => {
+    const transaction = {
+      type: 'expense',
+      amount: -1000000000,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(false)
+    // Should catch negative amount (not the max limit since it's negative)
+    expect(result.errors).toContainEqual({
+      field: 'amount',
+      message: 'Amount must be a positive number'
+    })
+  })
+
+  it('should test income type with income category boundaries', () => {
+    // Test all income categories are accepted
+    const incomeCategories = ['Salary', 'Business', 'Investment', 'Rental Income',
+                              'Gifts/Refunds', 'Freelance', 'Bonus', 'Other Income']
+
+    incomeCategories.forEach(category => {
+      const transaction = {
+        type: 'income',
+        amount: 1000,
+        category: category,
+        date: '2026-02-01',
+        notes: ''
+      }
+      const result = validateTransaction(transaction)
+      expect(result.valid).toBe(true)
+    })
+  })
+
+  it('should test expense type with expense category boundaries', () => {
+    // Test some expense categories that might be edge cases
+    const expenseCategories = ['Food', 'Misc/Buffer', 'Utilities/Bills', 'Kids/School']
+
+    expenseCategories.forEach(category => {
+      const transaction = {
+        type: 'expense',
+        amount: 100,
+        category: category,
+        date: '2026-02-01',
+        notes: ''
+      }
+      const result = validateTransaction(transaction)
+      expect(result.valid).toBe(true)
+    })
+  })
+
+  it('should handle invalid date format variations', () => {
+    const invalidDates = ['not-a-date', 'invalid', 'abc-def-ghij']
+
+    invalidDates.forEach(date => {
+      const transaction = {
+        type: 'expense',
+        amount: 100,
+        category: 'Food',
+        date: date,
+        notes: ''
+      }
+      const result = validateTransaction(transaction)
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.field === 'date')).toBe(true)
+    })
+  })
+
+  it('should handle date at exact 1900-01-01 boundary', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 100,
+      category: 'Food',
+      date: '1900-01-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(true)
+  })
+
+  it('should handle date at exact today boundary', () => {
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+
+    const transaction = {
+      type: 'expense',
+      amount: 100,
+      category: 'Food',
+      date: todayStr,
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(true)
+  })
+
+  it('should test notes at exact 500 character boundary', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 100,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: 'a'.repeat(500)
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(true)
+  })
+
+  it('should test notes at 501 characters', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 100,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: 'a'.repeat(501)
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContainEqual({
+      field: 'notes',
+      message: 'Notes too long (max 500 characters)'
+    })
+  })
+
+  it('should handle undefined notes field', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 100,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: undefined
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(true)
+    expect(result.sanitized.notes).toBe('')
+  })
+
+  it('should handle null notes field', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 100,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: null
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(true)
+    expect(result.sanitized.notes).toBe('')
+  })
+
+  it('should test amount boundary at 999999998', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 999999998,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(true)
+  })
+
+  it('should test amount boundary at 1000000000', () => {
+    const transaction = {
+      type: 'expense',
+      amount: 1000000000,
+      category: 'Food',
+      date: '2026-02-01',
+      notes: ''
+    }
+    const result = validateTransaction(transaction)
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContainEqual({
+      field: 'amount',
+      message: 'Amount exceeds maximum limit'
+    })
   })
 })
