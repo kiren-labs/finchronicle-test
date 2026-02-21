@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { getDaysSinceBackup, shouldShowBackupReminder } from '../../src/app.js'
+import { 
+  getDaysSinceBackup, 
+  shouldShowBackupReminder,
+  __testSetLastBackupTimestamp,
+  __testSetTransactions,
+  __testResetBackupState
+} from '../../src/app.js'
 
 // Note: getDaysSinceBackup and shouldShowBackupReminder rely on module-level
 // variables (lastBackupTimestamp, transactions) which are defined in the main app.
@@ -342,6 +348,189 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       expect(typeof shouldShowBackupReminder).toBe('function')
       const result = shouldShowBackupReminder()
       expect(typeof result).toBe('boolean')
+    })
+  })
+
+  describe('shouldShowBackupReminder - Never Backed Up with Transactions', () => {
+    let originalDateNow
+
+    beforeEach(() => {
+      originalDateNow = Date.now
+      // Mock current time: 2026-02-08 12:00:00 UTC
+      const mockNow = new Date('2026-02-08T12:00:00Z').getTime()
+      global.Date.now = vi.fn(() => mockNow)
+      
+      // Reset state before each test
+      __testResetBackupState()
+    })
+
+    afterEach(() => {
+      global.Date.now = originalDateNow
+      __testResetBackupState()
+    })
+
+    it('should return false when never backed up and first transaction is less than 7 days old', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Transaction created 3 days ago
+      const threeDaysAgo = now - (3 * oneDayInMs)
+      __testSetTransactions([
+        { id: threeDaysAgo, amount: 1000, category: 'Food' }
+      ])
+      
+      // lastBackupTimestamp is null (never backed up)
+      const result = shouldShowBackupReminder()
+      
+      // Should NOT remind - within 7-day grace period
+      expect(result).toBe(false)
+    })
+
+    it('should return true when never backed up and first transaction is exactly 7 days old', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Transaction created exactly 7 days ago
+      const sevenDaysAgo = now - (7 * oneDayInMs)
+      __testSetTransactions([
+        { id: sevenDaysAgo, amount: 1000, category: 'Food' }
+      ])
+      
+      const result = shouldShowBackupReminder()
+      
+      // Should remind - grace period expired
+      expect(result).toBe(true)
+    })
+
+    it('should return true when never backed up and first transaction is more than 7 days old', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Transaction created 10 days ago
+      const tenDaysAgo = now - (10 * oneDayInMs)
+      __testSetTransactions([
+        { id: tenDaysAgo, amount: 1000, category: 'Food' }
+      ])
+      
+      const result = shouldShowBackupReminder()
+      
+      // Should remind - well past grace period
+      expect(result).toBe(true)
+    })
+
+    it('should sort transactions by id and use the oldest one', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Add transactions in random order
+      const tenDaysAgo = now - (10 * oneDayInMs)
+      const threeDaysAgo = now - (3 * oneDayInMs)
+      const fiveDaysAgo = now - (5 * oneDayInMs)
+      
+      __testSetTransactions([
+        { id: fiveDaysAgo, amount: 500, category: 'Transport' },
+        { id: tenDaysAgo, amount: 1000, category: 'Food' }, // Oldest
+        { id: threeDaysAgo, amount: 200, category: 'Entertainment' }
+      ])
+      
+      const result = shouldShowBackupReminder()
+      
+      // Should use oldest transaction (10 days), which is >= 7 days
+      expect(result).toBe(true)
+    })
+
+    it('should return false when oldest transaction is 6 days old even with newer transactions', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      const sixDaysAgo = now - (6 * oneDayInMs)
+      const twoDaysAgo = now - (2 * oneDayInMs)
+      
+      __testSetTransactions([
+        { id: twoDaysAgo, amount: 200, category: 'Transport' },
+        { id: sixDaysAgo, amount: 1000, category: 'Food' } // Oldest
+      ])
+      
+      const result = shouldShowBackupReminder()
+      
+      // Should NOT remind - oldest is still within 7-day grace period
+      expect(result).toBe(false)
+    })
+
+    it('should handle transaction with lowest id when multiple transactions exist', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Create transactions with specific IDs to test sorting
+      const oldestId = now - (8 * oneDayInMs)
+      const middleId = now - (5 * oneDayInMs)
+      const newestId = now - (2 * oneDayInMs)
+      
+      __testSetTransactions([
+        { id: newestId, amount: 100, category: 'Food' },
+        { id: middleId, amount: 200, category: 'Transport' },
+        { id: oldestId, amount: 300, category: 'Entertainment' }
+      ])
+      
+      const result = shouldShowBackupReminder()
+      
+      // Should find oldest transaction (8 days) and return true
+      expect(result).toBe(true)
+    })
+  })
+
+  describe('shouldShowBackupReminder - With Last Backup Timestamp', () => {
+    let originalDateNow
+
+    beforeEach(() => {
+      originalDateNow = Date.now
+      const mockNow = new Date('2026-02-08T12:00:00Z').getTime()
+      global.Date.now = vi.fn(() => mockNow)
+      __testResetBackupState()
+    })
+
+    afterEach(() => {
+      global.Date.now = originalDateNow
+      __testResetBackupState()
+    })
+
+    it('should return false when backed up less than 30 days ago', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Backed up 20 days ago
+      const twentyDaysAgo = now - (20 * oneDayInMs)
+      __testSetLastBackupTimestamp(twentyDaysAgo)
+      
+      const result = shouldShowBackupReminder()
+      
+      expect(result).toBe(false)
+    })
+
+    it('should return true when backed up 30 or more days ago', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Backed up exactly 30 days ago
+      const thirtyDaysAgo = now - (30 * oneDayInMs)
+      __testSetLastBackupTimestamp(thirtyDaysAgo)
+      
+      const result = shouldShowBackupReminder()
+      
+      expect(result).toBe(true)
+    })
+
+    it('should return true when backed up more than 30 days ago', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Backed up 45 days ago
+      const fortyFiveDaysAgo = now - (45 * oneDayInMs)
+      __testSetLastBackupTimestamp(fortyFiveDaysAgo)
+      
+      const result = shouldShowBackupReminder()
+      
+      expect(result).toBe(true)
     })
   })
 })
