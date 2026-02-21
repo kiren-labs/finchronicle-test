@@ -25,21 +25,21 @@ describe('Version Tracking (v3.7.0+)', () => {
 
 describe('getPreviousMonth', () => {
   it('should return previous month for mid-year months', () => {
-    expect(getPreviousMonth('2025-06')).toBe('2025-04')
-    expect(getPreviousMonth('2025-03')).toBe('2025-01')
+    expect(getPreviousMonth('2025-06')).toBe('2025-05')
+    expect(getPreviousMonth('2025-03')).toBe('2025-02')
   })
 
   it('should handle year transitions', () => {
-    expect(getPreviousMonth('2025-01')).toBe('2024-11')
-    expect(getPreviousMonth('2024-01')).toBe('2023-11')
+    expect(getPreviousMonth('2025-01')).toBe('2024-12')
+    expect(getPreviousMonth('2024-01')).toBe('2023-12')
   })
 
   it('should handle December going to November', () => {
-    expect(getPreviousMonth('2025-12')).toBe('2025-10')
+    expect(getPreviousMonth('2025-12')).toBe('2025-11')
   })
 
   it('should handle February to January', () => {
-    expect(getPreviousMonth('2025-02')).toBe('2024-12')
+    expect(getPreviousMonth('2025-02')).toBe('2025-01')
   })
 
   it('should return correct format YYYY-MM', () => {
