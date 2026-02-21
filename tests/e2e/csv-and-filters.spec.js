@@ -266,41 +266,38 @@ test.describe('Filters and Pagination', () => {
   })
 
   test('should reset to page 1 when filters change', async ({ page }) => {
-    // Add 25 Food transactions to trigger pagination
-    for (let i = 1; i <= 25; i++) {
-      await addTransaction(page, {
-        amount: '100',
-        category: 'Food',
-        date: '2025-02-01'
-      }, true) // Wait for success message to ensure transaction is saved
-      if (i % 5 === 0) await page.waitForTimeout(100) // Brief pause every 5 transactions
-    }
+    // Use CSV import for faster test setup
+    await navigateToTab(page, 'settingsTab')
 
-    // Also add 25 Transport transactions so filter still has pagination
-    for (let i = 1; i <= 25; i++) {
-      await addTransaction(page, {
-        amount: '100',
-        category: 'Transport',
-        date: '2025-02-01'
-      }, true)
-      if (i % 5 === 0) await page.waitForTimeout(100)
-    }
+    // Create CSV with 21 Food + 21 Transport = 42 transactions
+    const foodRows = Array.from({length: 21}, (_, i) => `2025-02-${String(i+1).padStart(2,'0')},expense,Food,100,Food${i+1}`).join('\n')
+    const transportRows = Array.from({length: 21}, (_, i) => `2025-01-${String(i+1).padStart(2,'0')},expense,Transport,100,Transport${i+1}`).join('\n')
+    const csvContent = `Date,Type,Category,Amount,Notes\n${foodRows}\n${transportRows}`
+
+    const fileInput = page.locator('#importFile')
+    await fileInput.setInputFiles({
+      name: 'test-pagination.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csvContent),
+    })
+
+    await expect(page.locator('.success-message')).toContainText('Imported 42 transaction')
 
     await navigateToTab(page, 'listTab')
 
-    // Should have pagination with 55 total transactions (25 Food + 25 Transport + 5 from beforeEach)
+    // Should have pagination with 47 total transactions (42 imported + 5 from beforeEach)
     await expect(page.locator('#pageInfo')).toContainText('Page 1')
 
     // Go to page 2
     await page.click('#nextBtn')
     await expect(page.locator('#pageInfo')).toContainText('Page 2')
 
-    // Apply a filter to Transport (should have 27 Transport: 25 new + 2 from beforeEach)
+    // Apply a filter to Transport (should have 23 Transport: 21 imported + 2 from beforeEach)
     await page.selectOption('#categoryFilter', 'Transport')
 
-    // Should reset to page 1 after filtering
+    // Should reset to page 1 after filtering and show correct count
     await expect(page.locator('#pageInfo')).toContainText('Page 1')
-    await expect(page.locator('#pageInfo')).toContainText('27 transactions')
+    await expect(page.locator('#pageInfo')).toContainText('23 transactions')
   })
 })
 
