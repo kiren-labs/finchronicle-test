@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseCSV, normalizeDate, monthNameToNumber } from '../../src/app.js'
+import { parseCSV, normalizeDate, monthNameToNumber, findHeaderIndex } from '../../src/app.js'
 
 describe('parseCSV', () => {
   it('should parse simple CSV', () => {
@@ -145,5 +145,55 @@ describe('monthNameToNumber', () => {
     expect(monthNameToNumber('Invalid')).toBe('')
     expect(monthNameToNumber('')).toBe('')
     expect(monthNameToNumber('13')).toBe('')
+  })
+})
+
+describe('findHeaderIndex', () => {
+  it('should find header matching regex', () => {
+    const headers = ['Date', 'Amount', 'Category', 'Notes']
+    const regex = /amount/i
+    expect(findHeaderIndex(headers, regex)).toBe(1)
+  })
+
+  it('should return -1 when no header matches', () => {
+    const headers = ['Date', 'Amount', 'Category', 'Notes']
+    const regex = /price/i
+    expect(findHeaderIndex(headers, regex)).toBe(-1)
+  })
+
+  it('should return first match when multiple headers match', () => {
+    const headers = ['Date1', 'Date2', 'Amount', 'Notes']
+    const regex = /date/i
+    expect(findHeaderIndex(headers, regex)).toBe(0)
+  })
+
+  it('should handle case-sensitive regex', () => {
+    const headers = ['date', 'Amount', 'CATEGORY']
+    const regex = /Date/ // Case-sensitive
+    expect(findHeaderIndex(headers, regex)).toBe(-1)
+  })
+
+  it('should handle case-insensitive regex', () => {
+    const headers = ['date', 'Amount', 'CATEGORY']
+    const regex = /DATE/i // Case-insensitive
+    expect(findHeaderIndex(headers, regex)).toBe(0)
+  })
+
+  it('should return -1 for empty headers array', () => {
+    const headers = []
+    const regex = /amount/i
+    expect(findHeaderIndex(headers, regex)).toBe(-1)
+  })
+
+  it('should handle partial matches', () => {
+    const headers = ['Transaction Date', 'Amount (INR)', 'Category']
+    const regex = /amount/i
+    expect(findHeaderIndex(headers, regex)).toBe(1)
+  })
+
+  it('should work with complex regex patterns', () => {
+    const headers = ['date', 'amt', 'category', 'notes']
+    const regex = /^(amount|amt|value)$/i
+    expect(findHeaderIndex(headers, regex)).toBe(1)
   })
 })

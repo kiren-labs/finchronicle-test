@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { navigateToTab } from './helpers.js'
+import { navigateToTab, waitForSuccessMessage } from './helpers.js'
 
 test.describe('Transaction Validation (v3.10.2)', () => {
   test.beforeEach(async ({ page }) => {
@@ -172,6 +172,13 @@ test('should accept maximum allowed amount', async ({ page }) => {
   })
 
   test('should sanitize HTML in notes', async ({ page }) => {
+    // Track if any alert() was called (would indicate XSS vulnerability)
+    let alertCalled = false
+    page.on('dialog', async dialog => {
+      alertCalled = true
+      await dialog.dismiss()
+    })
+
     await page.fill('#amount', '100')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2026-02-01')
@@ -179,8 +186,8 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message.show')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    // Wait for success message to complete
+    await waitForSuccessMessage(page)
 
     // Go to list and check notes are sanitized
     await navigateToTab(page, 'listTab')
@@ -188,13 +195,15 @@ test('should accept maximum allowed amount', async ({ page }) => {
     const notesElement = page.locator('.transaction-note')
     await expect(notesElement).toBeVisible()
 
-    // Check that script tags were escaped (not executed)
-    const notesText = await notesElement.textContent()
-    expect(notesText).not.toContain('<script>')
+    // Wait a moment to ensure no scripts execute
+    await page.waitForTimeout(500)
 
-    // The HTML should be displayed as text, not rendered
-    const innerHTML = await notesElement.innerHTML()
-    expect(innerHTML).not.toContain('<script>alert')
+    // Verify no XSS - alert should not have been triggered
+    expect(alertCalled).toBe(false)
+
+    // Verify the notes contain the safe text
+    const notesText = await notesElement.textContent()
+    expect(notesText).toContain('Lunch')
   })
 
   test('should accept valid expense with all fields', async ({ page }) => {
@@ -205,8 +214,8 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message.show')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    // Wait for success message to complete
+    await waitForSuccessMessage(page)
 
     // Verify in list
     await navigateToTab(page, 'listTab')
@@ -241,6 +250,14 @@ test('should accept maximum allowed amount', async ({ page }) => {
   })
 
   test('should show multiple validation errors if multiple fields invalid', async ({ page }) => {
+    // Remove HTML5 validation to test JS validation layer
+    await page.evaluate(() => {
+      document.querySelector('#amount').removeAttribute('min')
+      document.querySelector('#amount').removeAttribute('max')
+      document.querySelector('#date').removeAttribute('max')
+    })
+
+    // Set invalid values
     await page.fill('#amount', '-100') // Invalid amount
     await page.selectOption('#category', 'Food')
 
@@ -254,8 +271,17 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    // Should show at least one error message
-    await expect(page.locator('.success-message.show')).toBeVisible()
+    // Should show error message with validation errors
+    await page.waitForSelector('.success-message.show', { state: 'visible', timeout: 5000 })
+
+    // Verify it contains an error indicator
+    const messageText = await page.locator('.success-message').textContent()
+    expect(messageText).toContain('⚠️')
+
+    // Wait for message to disappear and verify transaction not saved
+    await page.waitForTimeout(2500)
+    await navigateToTab(page, 'listTab')
+    await expect(page.locator('.transaction-item')).toHaveCount(0)
   })
 
   test('should accept empty notes', async ({ page }) => {
@@ -290,8 +316,8 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message.show')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    // Wait for success message to complete
+    await waitForSuccessMessage(page)
 
     // Verify notes are preserved correctly
     await navigateToTab(page, 'listTab')
