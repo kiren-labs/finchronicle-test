@@ -65,6 +65,13 @@ describe('normalizeImportedCategory - Expense', () => {
     expect(normalizeImportedCategory('', 'Event contribution', 'expense')).toBe('Charity/Gifts')
   })
 
+  it('should detect Fees/Docs from keywords', () => {
+    expect(normalizeImportedCategory('', 'Passport renewal', 'expense')).toBe('Fees/Docs')
+    expect(normalizeImportedCategory('', 'Birth certificate', 'expense')).toBe('Fees/Docs')
+    expect(normalizeImportedCategory('', 'Photostats and docs', 'expense')).toBe('Fees/Docs')
+    expect(normalizeImportedCategory('', 'Application fee', 'expense')).toBe('Fees/Docs')
+  })
+
   it('should return Other Expense for unknown categories', () => {
     expect(normalizeImportedCategory('', 'random stuff', 'expense')).toBe('Other Expense')
     expect(normalizeImportedCategory('Unknown', 'no keywords', 'expense')).toBe('Unknown')
@@ -128,6 +135,38 @@ describe('normalizeImportedCategory - Income', () => {
   })
 })
 
+describe('normalizeImportedCategory - Hard Categories', () => {
+  it('should preserve hard-coded base categories exactly', () => {
+    expect(normalizeImportedCategory('rent', 'some notes', 'expense')).toBe('rent')
+    expect(normalizeImportedCategory('debt/loans', 'payment', 'expense')).toBe('debt/loans')
+    expect(normalizeImportedCategory('nanny salary', 'monthly', 'expense')).toBe('nanny salary')
+    expect(normalizeImportedCategory('play school (son)', 'tuition', 'expense')).toBe('play school (son)')
+  })
+})
+
+describe('normalizeImportedCategory - Base Category Normalization', () => {
+  it('should normalize base category capitalization', () => {
+    expect(normalizeImportedCategory('transport', '', 'expense')).toBe('Transport')
+    expect(normalizeImportedCategory('groceries', '', 'expense')).toBe('Groceries')
+    expect(normalizeImportedCategory('food', '', 'expense')).toBe('Food')
+  })
+
+  it('should map common category aliases', () => {
+    expect(normalizeImportedCategory('dining out', '', 'expense')).toBe('Food')
+    expect(normalizeImportedCategory('utilities/misc', '', 'expense')).toBe('Utilities/Bills')
+    expect(normalizeImportedCategory('gifts/events', '', 'expense')).toBe('Charity/Gifts')
+    expect(normalizeImportedCategory('gifts', '', 'expense')).toBe('Charity/Gifts')
+    expect(normalizeImportedCategory('charity', '', 'expense')).toBe('Charity/Gifts')
+    expect(normalizeImportedCategory('insurance', '', 'expense')).toBe('Insurance/Taxes')
+    expect(normalizeImportedCategory('taxes', '', 'expense')).toBe('Insurance/Taxes')
+    expect(normalizeImportedCategory('insurance/taxes', '', 'expense')).toBe('Insurance/Taxes')
+    expect(normalizeImportedCategory('savings', '', 'expense')).toBe('Savings/Investments')
+    expect(normalizeImportedCategory('investments', '', 'expense')).toBe('Savings/Investments')
+    expect(normalizeImportedCategory('savings/investments', '', 'expense')).toBe('Savings/Investments')
+    expect(normalizeImportedCategory('other expense', '', 'expense')).toBe('Misc/Buffer')
+  })
+})
+
 describe('normalizeImportedCategory - Edge Cases', () => {
   it('should handle empty strings', () => {
     expect(normalizeImportedCategory('', '', 'expense')).toBe('Other Expense')
@@ -144,5 +183,10 @@ describe('normalizeImportedCategory - Edge Cases', () => {
 
   it('should use base category if no keywords match', () => {
     expect(normalizeImportedCategory('Custom Category', 'no matching keywords', 'expense')).toBe('Custom Category')
+  })
+
+  it('should handle keyword detection with base category present', () => {
+    expect(normalizeImportedCategory('Transport', 'Taxi to airport', 'expense')).toBe('Transport')
+    expect(normalizeImportedCategory('SomeCategory', 'grocery shopping', 'expense')).toBe('Groceries')
   })
 })
