@@ -121,6 +121,20 @@ if (typeof localStorage === 'undefined') {
 
 // Export global variable accessors for testing
 export { lastBackupTimestamp, transactions }
+
+// Test helper functions to manipulate module-level state
+export function __testSetLastBackupTimestamp(timestamp) {
+  lastBackupTimestamp = timestamp
+}
+
+export function __testSetTransactions(txArray) {
+  transactions = txArray
+}
+
+export function __testResetBackupState() {
+  lastBackupTimestamp = null
+  transactions = []
+}
 `
 
 // Write to src/app.js
