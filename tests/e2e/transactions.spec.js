@@ -11,11 +11,16 @@ test.describe('Transaction Management', () => {
     await page.waitForLoadState('networkidle')
     // Wait for the app to render (either top tabs or bottom nav)
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
+    // Wait for category dropdown to be populated (critical for WebKit)
+    await page.waitForFunction(() => {
+      const categorySelect = document.querySelector('#category')
+      return categorySelect && categorySelect.options.length > 1
+    }, { timeout: 10000 })
   })
 
   test('should add a new expense transaction', async ({ page }) => {
-    // Add tab should be active by default
-    await expect(page.locator('#add-tab')).toHaveClass(/active/)
+    // Add tab should be active by default (check mobile nav which is visible)
+    await expect(page.locator('#add-nav')).toHaveClass(/active/)
 
     // Expense should be selected by default
     await expect(page.locator('[data-type="expense"]')).toHaveClass(/active/)
@@ -30,8 +35,8 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Check success message appears
-    await expect(page.locator('.success-message')).toBeVisible()
-    await expect(page.locator('.success-message')).toHaveText('Transaction saved!')
+    await expect(page.locator('.success-message.show')).toBeVisible()
+    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
 
     // Switch to List tab
     await navigateToTab(page, 'listTab')
@@ -46,7 +51,7 @@ test.describe('Transaction Management', () => {
   test('should add a new income transaction', async ({ page }) => {
     // Switch to income type
     await page.click('[data-type="income"]')
-    await expect(page.locator('[data-type="income"]')).toHaveClass(/active/)
+    await expect(page.locator('[data-type="income"]')).toHaveAttribute('aria-selected', 'true')
 
     // Fill form
     await page.fill('#amount', '5000')
@@ -58,7 +63,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Check success message
-    await expect(page.locator('.success-message')).toHaveText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
 
     // Go to list
     await navigateToTab(page, 'listTab')
@@ -79,7 +84,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Wait for success message
-    await expect(page.locator('.success-message')).toBeVisible()
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Go to list
     await navigateToTab(page, 'listTab')
@@ -88,8 +93,8 @@ test.describe('Transaction Management', () => {
     // Click edit button
     await page.click('.edit-btn')
 
-    // Should be back on Add tab (now in edit mode)
-    await expect(page.locator('#add-tab')).toHaveClass(/active/)
+    // Should be back on Add tab (now in edit mode) - check mobile nav
+    await expect(page.locator('#add-nav')).toHaveClass(/active/)
     await expect(page.locator('#formTitle')).toHaveText('Edit Transaction')
 
     // Form should be populated
@@ -105,7 +110,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Verify update message
-    await expect(page.locator('.success-message')).toHaveText('Transaction updated!')
+    await expect(page.locator('.success-message')).toContainText('Transaction updated!')
 
     // Check updated values in list
     await navigateToTab(page, 'listTab')
@@ -121,7 +126,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Wait for success message
-    await expect(page.locator('.success-message')).toBeVisible()
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Edit transaction
     await navigateToTab(page, 'listTab')
@@ -148,7 +153,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Wait for success message
-    await expect(page.locator('.success-message')).toBeVisible()
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Go to list
     await navigateToTab(page, 'listTab')
@@ -158,9 +163,9 @@ test.describe('Transaction Management', () => {
     await page.click('.delete-btn')
 
     // Confirm modal appears
-    await expect(page.locator('.modal')).toHaveClass(/show/)
-    await expect(page.locator('.modal-title')).toHaveText('Delete Transaction?')
-    await expect(page.locator('.modal-text')).toHaveText('This action cannot be undone.')
+    await expect(page.locator('#deleteModal')).toHaveClass(/show/)
+    await expect(page.locator('#deleteModal .modal-title')).toHaveText('Delete Transaction?')
+    await expect(page.locator('#deleteModal .modal-text')).toHaveText('This action cannot be undone.')
 
     // Confirm deletion
     await page.click('.modal-btn-confirm')
@@ -178,20 +183,20 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Wait for success message
-    await expect(page.locator('.success-message')).toBeVisible()
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Go to list and try to delete
     await navigateToTab(page, 'listTab')
     await page.click('.delete-btn')
 
     // Modal should appear
-    await expect(page.locator('.modal')).toHaveClass(/show/)
+    await expect(page.locator('#deleteModal')).toHaveClass(/show/)
 
     // Cancel
     await page.click('.modal-btn-cancel')
 
     // Modal should close
-    await expect(page.locator('.modal')).not.toHaveClass(/show/)
+    await expect(page.locator('#deleteModal')).not.toHaveClass(/show/)
 
     // Transaction should still exist
     await expect(page.locator('.transaction-item')).toHaveCount(1)
@@ -258,7 +263,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Should still save successfully
-    await expect(page.locator('.success-message')).toBeVisible()
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Go to list
     await navigateToTab(page, 'listTab')

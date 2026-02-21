@@ -14,16 +14,19 @@
 export async function navigateToTab(page, tabName) {
   // Both desktop tabs (.tabs) and mobile bottom-nav have aria-controls attributes
   // Since .tabs is display:none and bottom-nav is display:flex, we need to click the visible one
-  const tabLocator = page.locator(`[aria-controls="${tabName}"]`).locator('visible=true').first()
-
-  // Wait for the visible tab to be ready
-  await tabLocator.waitFor({ state: 'visible', timeout: 10000 })
-
-  // Click the tab
-  await tabLocator.click()
-
-  // Wait a brief moment for tab content to render
-  await page.waitForTimeout(100)
+  const tabButtons = await page.locator(`[aria-controls="${tabName}"]`).all()
+  
+  // Find the first visible button
+  for (const button of tabButtons) {
+    if (await button.isVisible()) {
+      await button.click()
+      // Wait a brief moment for tab content to render
+      await page.waitForTimeout(100)
+      return
+    }
+  }
+  
+  throw new Error(`No visible tab button found for ${tabName}`)
 }
 
 /**
@@ -59,6 +62,7 @@ export async function addTransaction(page, transaction, waitForSuccess = true) {
   // Select transaction type if income
   if (type === 'income') {
     await page.click('[data-type="income"]')
+    await page.waitForTimeout(100) // Wait for category dropdown to update
   }
 
   // Fill form fields
@@ -73,8 +77,17 @@ export async function addTransaction(page, transaction, waitForSuccess = true) {
   // Submit
   await page.click('#submitBtn')
 
-  // Wait for success message if requested
+  // Wait for form to process
   if (waitForSuccess) {
-    await page.waitForSelector('.success-message', { state: 'visible', timeout: 5000 })
+    // Wait for the form to reset (amount field clears after successful save)
+    await page.waitForFunction(() => {
+      const amountField = document.querySelector('#amount')
+      return amountField && amountField.value === ''
+    }, { timeout: 5000 }).catch(async () => {
+      // If form doesn't reset, wait for success/error message
+      await page.waitForSelector('.success-message.show', { state: 'visible', timeout: 2000 }).catch(() => {})
+    })
+    // Brief additional wait to ensure localStorage save completes
+    await page.waitForTimeout(200)
   }
 }

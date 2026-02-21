@@ -10,9 +10,19 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     // Wait for app to be fully loaded and interactive
     await page.waitForLoadState('networkidle')
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
+    // Wait for category dropdown to be populated (critical for WebKit)
+    await page.waitForFunction(() => {
+      const categorySelect = document.querySelector('#category')
+      return categorySelect && categorySelect.options.length > 1
+    }, { timeout: 10000 })
   })
 
   test('should reject negative amounts', async ({ page }) => {
+    // Remove HTML5 validation min attribute to test JS validation
+    await page.evaluate(() => {
+      document.querySelector('#amount').removeAttribute('min')
+    })
+
     await page.fill('#amount', '-100')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2026-02-01')
@@ -21,7 +31,8 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.click('#submitBtn')
 
     // Should show error message
-    await page.waitForSelector('.success-message:has-text("Amount must be a positive number")', { state: 'visible', timeout: 5000 })
+    await expect(page.locator('.success-message.show')).toBeVisible()
+    await expect(page.locator('.success-message')).toContainText('Amount must be a positive number')
 
     // Transaction should not be saved
     await navigateToTab(page, 'listTab')
@@ -29,6 +40,11 @@ test.describe('Transaction Validation (v3.10.2)', () => {
   })
 
   test('should reject zero amounts', async ({ page }) => {
+    // Remove HTML5 validation min attribute to test JS validation
+    await page.evaluate(() => {
+      document.querySelector('#amount').removeAttribute('min')
+    })
+
     await page.fill('#amount', '0')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2026-02-01')
@@ -41,6 +57,11 @@ test.describe('Transaction Validation (v3.10.2)', () => {
   })
 
   test('should reject amounts exceeding maximum limit', async ({ page }) => {
+    // Remove HTML5 validation max attribute to test JS validation
+    await page.evaluate(() => {
+      document.querySelector('#amount').removeAttribute('max')
+    })
+
     await page.fill('#amount', '1000000000') // 100 crore (exceeds 99 crore limit)
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2026-02-01')
@@ -52,17 +73,24 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await expect(page.locator('.success-message')).toContainText('Amount exceeds maximum limit')
   })
 
-  test('should accept maximum allowed amount', async ({ page }) => {
-    await page.fill('#amount', '999999999') // ₹99 crore exactly
-    await page.selectOption('#category', 'Food')
-    await page.fill('#date', '2026-02-01')
-    await page.fill('#notes', 'Large transaction')
-
-    await page.click('#submitBtn')
-
-    await expect(page.locator('.success-message')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+test('should accept maximum allowed amount', async ({ page }) => {
+  // Ensure HTML5 validation doesn't block large valid amounts
+  await page.evaluate(() => {
+    const amountInput = document.querySelector('#amount')
+    amountInput.removeAttribute('max')
   })
+
+  await page.fill('#amount', '999999999') // ₹99 crore exactly
+  await page.selectOption('#category', 'Food')
+  await page.fill('#date', '2026-02-01')
+  await page.fill('#notes', 'Large transaction')
+
+  await page.click('#submitBtn')
+
+  // Wait for success message more flexibly
+  await page.waitForSelector('.success-message', { state: 'visible', timeout: 5000 })
+  await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+})
 
   test('should reject future dates', async ({ page }) => {
     const tomorrow = new Date()

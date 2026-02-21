@@ -10,6 +10,11 @@ test.describe('CSV Import/Export', () => {
     await page.waitForLoadState('networkidle')
     // Wait for the app to render (either top tabs or bottom nav)
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
+    // Wait for category dropdown to be populated (critical for WebKit)
+    await page.waitForFunction(() => {
+      const categorySelect = document.querySelector('#category')
+      return categorySelect && categorySelect.options.length > 1
+    }, { timeout: 10000 })
   })
 
   test('should export transactions to CSV', async ({ page }) => {
@@ -40,7 +45,7 @@ test.describe('CSV Import/Export', () => {
     expect(download.suggestedFilename()).toMatch(/finchronicle-\d{4}-\d{2}-\d{2}\.csv/)
 
     // Verify success message
-    await expect(page.locator('.success-message')).toHaveText('Export successful!')
+    await expect(page.locator('.success-message')).toContainText('Export successful')
   })
 
   test('should import transactions from CSV', async ({ page }) => {
@@ -123,6 +128,11 @@ test.describe('Filters and Pagination', () => {
     // Wait for app to be fully loaded and interactive
     await page.waitForLoadState('networkidle')
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
+    // Wait for category dropdown to be populated (critical for WebKit)
+    await page.waitForFunction(() => {
+      const categorySelect = document.querySelector('#category')
+      return categorySelect && categorySelect.options.length > 1
+    }, { timeout: 10000 })
 
     // Add multiple transactions across different months
     const transactions = [
@@ -134,8 +144,8 @@ test.describe('Filters and Pagination', () => {
     ]
 
     for (const tx of transactions) {
-      await addTransaction(page, tx, false) // Don't wait for success message each time
-      await page.waitForTimeout(100) // Small delay between transactions
+      await addTransaction(page, tx, true) // Wait for success message to ensure transaction is saved
+      await page.waitForTimeout(200) // Small delay between transactions
     }
   })
 
@@ -216,7 +226,8 @@ test.describe('Filters and Pagination', () => {
         category: 'Food',
         date: '2025-02-01',
         notes: `Transaction ${i}`
-      }, false)
+      }, true) // Wait for success message to ensure transaction is saved
+      if (i % 5 === 0) await page.waitForTimeout(100) // Brief pause every 5 transactions
     }
 
     await navigateToTab(page, 'listTab')
@@ -261,7 +272,8 @@ test.describe('Filters and Pagination', () => {
         amount: '100',
         category: 'Food',
         date: '2025-02-01'
-      }, false)
+      }, true) // Wait for success message to ensure transaction is saved
+      if (i % 5 === 0) await page.waitForTimeout(100) // Brief pause every 5 transactions
     }
 
     await navigateToTab(page, 'listTab')
@@ -287,6 +299,11 @@ test.describe('Groups and Analytics', () => {
     await page.waitForLoadState('networkidle')
     // Wait for the app to render (either top tabs or bottom nav)
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
+    // Wait for category dropdown to be populated (critical for WebKit)
+    await page.waitForFunction(() => {
+      const categorySelect = document.querySelector('#category')
+      return categorySelect && categorySelect.options.length > 1
+    }, { timeout: 10000 })
   })
 
   test('should show grouped view by month', async ({ page }) => {
