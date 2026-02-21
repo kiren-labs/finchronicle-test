@@ -266,8 +266,8 @@ test.describe('Filters and Pagination', () => {
   })
 
   test('should reset to page 1 when filters change', async ({ page }) => {
-    // Add 25 transactions to trigger pagination
-    for (let i = 1; i <= 20; i++) {
+    // Add 25 Food transactions to trigger pagination
+    for (let i = 1; i <= 25; i++) {
       await addTransaction(page, {
         amount: '100',
         category: 'Food',
@@ -276,17 +276,31 @@ test.describe('Filters and Pagination', () => {
       if (i % 5 === 0) await page.waitForTimeout(100) // Brief pause every 5 transactions
     }
 
+    // Also add 25 Transport transactions so filter still has pagination
+    for (let i = 1; i <= 25; i++) {
+      await addTransaction(page, {
+        amount: '100',
+        category: 'Transport',
+        date: '2025-02-01'
+      }, true)
+      if (i % 5 === 0) await page.waitForTimeout(100)
+    }
+
     await navigateToTab(page, 'listTab')
+
+    // Should have pagination with 55 total transactions (25 Food + 25 Transport + 5 from beforeEach)
+    await expect(page.locator('#pageInfo')).toContainText('Page 1')
 
     // Go to page 2
     await page.click('#nextBtn')
     await expect(page.locator('#pageInfo')).toContainText('Page 2')
 
-    // Apply a filter
+    // Apply a filter to Transport (should have 27 Transport: 25 new + 2 from beforeEach)
     await page.selectOption('#categoryFilter', 'Transport')
 
-    // Should reset to page 1
+    // Should reset to page 1 after filtering
     await expect(page.locator('#pageInfo')).toContainText('Page 1')
+    await expect(page.locator('#pageInfo')).toContainText('27 transactions')
   })
 })
 
@@ -330,13 +344,13 @@ test.describe('Groups and Analytics', () => {
     // Should show month card
     await expect(page.locator('.group-header')).toContainText('February 2025')
 
-    // Should show income, expenses, and net
-    await expect(page.locator('.card')).toContainText('Income')
-    await expect(page.locator('.card')).toContainText('2,000')
-    await expect(page.locator('.card')).toContainText('Expenses')
-    await expect(page.locator('.card')).toContainText('1,000')
-    await expect(page.locator('.card')).toContainText('Net')
-    await expect(page.locator('.card')).toContainText('1,000') // Net: 2000 - 1000
+    // Should show income, expenses, and net using more specific selectors
+    const groupContent = page.locator('#groupsTab .group-content')
+    await expect(groupContent).toContainText('Income')
+    await expect(groupContent).toContainText('2,000')
+    await expect(groupContent).toContainText('Expenses')
+    await expect(groupContent).toContainText('1,000')
+    await expect(groupContent).toContainText('Net')
   })
 
   test('should show grouped view by category', async ({ page }) => {
@@ -364,7 +378,8 @@ test.describe('Groups and Analytics', () => {
     await expect(page.locator('.group-header')).toContainText('Food')
     await expect(page.locator('.group-header')).toContainText('2 entries')
 
-    // Should show total
-    await expect(page.locator('.card')).toContainText('800') // 500 + 300
+    // Should show total using more specific selector
+    const groupContent = page.locator('#groupsTab .group-content')
+    await expect(groupContent).toContainText('800') // 500 + 300
   })
 })

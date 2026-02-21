@@ -170,9 +170,9 @@ test.describe('Transaction Management', () => {
     // Confirm deletion
     await page.click('.modal-btn-confirm')
 
-    // Verify empty state
-    await expect(page.locator('.empty-state')).toBeVisible()
-    await expect(page.locator('.empty-state')).toContainText('No transactions yet')
+    // Verify empty state in list tab (use more specific selector)
+    await expect(page.locator('#listTab .empty-state')).toBeVisible()
+    await expect(page.locator('#listTab .empty-state')).toContainText('No transactions yet')
   })
 
   test('should cancel deletion', async ({ page }) => {
