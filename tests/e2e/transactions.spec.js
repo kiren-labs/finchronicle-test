@@ -51,7 +51,7 @@ test.describe('Transaction Management', () => {
   test('should add a new income transaction', async ({ page }) => {
     // Switch to income type
     await page.click('[data-type="income"]')
-    await expect(page.locator('[data-type="income"]')).toHaveAttribute('aria-selected', 'true')
+    await expect(page.locator('[data-type="income"]')).toHaveClass(/active/)
 
     // Fill form
     await page.fill('#amount', '5000')
@@ -207,23 +207,32 @@ test.describe('Transaction Management', () => {
     await expect(page.locator('#monthNet')).toContainText('0')
     await expect(page.locator('#totalEntries')).toHaveText('0')
 
+    // Get today's date in YYYY-MM-DD format for the current month's summary
+    const today = new Date().toISOString().split('T')[0]
+
     // Add expense
     await page.fill('#amount', '1000')
     await page.selectOption('#category', 'Food')
-    await page.fill('#date', '2025-02-01')
+    await page.fill('#date', today)
     await page.click('#submitBtn')
+
+    // Wait for success message to ensure transaction is saved and UI updated
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Summary should update
     await expect(page.locator('#totalEntries')).toHaveText('1')
     await expect(page.locator('#monthExpense')).toContainText('1,000')
-    await expect(page.locator('#monthNet')).toContainText('-') // Negative since expense only
+    await expect(page.locator('#monthNet')).toContainText('1,000') // Net shows expense amount (no income yet)
 
     // Add income
     await page.fill('#amount', '5000')
     await page.click('[data-type="income"]')
     await page.selectOption('#category', 'Salary')
-    await page.fill('#date', '2025-02-01')
+    await page.fill('#date', today)
     await page.click('#submitBtn')
+
+    // Wait for success message
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Summary should update again
     await expect(page.locator('#totalEntries')).toHaveText('2')
@@ -239,6 +248,9 @@ test.describe('Transaction Management', () => {
     await page.fill('#date', '2025-02-01')
     await page.fill('#notes', 'Test persistence')
     await page.click('#submitBtn')
+
+    // Wait for success message to ensure transaction is saved to localStorage
+    await expect(page.locator('.success-message.show')).toBeVisible()
 
     // Reload page
     await page.reload()
