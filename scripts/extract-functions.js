@@ -100,17 +100,20 @@ export const state = {
 };\n\n`
 }
 
-// Extract currency data from currency.js
-const currencyJsContent = moduleContents['currency.js'] || ''
-const currenciesMatch = currencyJsContent.match(/const currencies = ({[\s\S]*?});/)
+// Extract currency data from state.js (not currency.js - it imports from state)
+const currenciesMatch = stateJsContent.match(/export const currencies = ({[\s\S]*?});/)
 if (currenciesMatch) {
-  moduleContent += `const currencies = ${currenciesMatch[1]};\n\n`
+  moduleContent += `export const currencies = ${currenciesMatch[1]};\n\n`
+} else {
+  console.warn('⚠️  Could not extract currencies object from state.js')
 }
 
 // Extract category data from state.js
 const categoriesMatch = stateJsContent.match(/export const categories = ({[\s\S]*?});/)
 if (categoriesMatch) {
   moduleContent += `export const categories = ${categoriesMatch[1]};\n\n`
+} else {
+  console.warn('⚠️  Could not extract categories object from state.js')
 }
 
 // Helper function to extract complete function body including export keyword
@@ -171,7 +174,7 @@ export function __testSetTransactions(txArray) {
   state.transactions = txArray
 }
 
-export function __testResetState() {
+export function __testResetBackupState() {
   state.lastBackupTimestamp = null
   state.transactions = []
   state.currentTab = 'add'
