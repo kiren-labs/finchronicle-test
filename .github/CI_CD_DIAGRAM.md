@@ -23,7 +23,7 @@
 │  1. Checkout main app (PR)      │◄──────────────────┤
 │  2. Checkout test repo  ────────┼───────────────────┘
 │  3. Extract functions            │
-│  4. Run unit tests (76)          │
+│  4. Run unit tests (201)         │
 │  5. Run E2E tests                │
 │  6. Upload artifacts             │
 │  7. Comment on PR                │
@@ -94,18 +94,19 @@
 
 ══════════════════════════════════════════════════════════════════════
 
-finance-tracker/app.js
+finance-tracker/js/*.js (Modular ES6)
    │
-   │ const APP_VERSION = '3.7.1'
+   │ APP_VERSION = '3.10.4'
+   │ 5 modules: utils, currency, validation, ui, settings
    ▼
 
 ┌──────────────────────────────────────────┐
 │  Extraction Script                        │
 │  (scripts/extract-functions.js)           │
 │                                            │
-│  1. Read app.js                            │
+│  1. Read modular JS files                  │
 │  2. Extract APP_VERSION                    │
-│  3. Extract 15 functions                   │
+│  3. Extract 19 functions from 5 modules    │
 │  4. Generate test-metadata.json            │
 └──────────────────────────────────────────┘
    │
@@ -113,10 +114,10 @@ finance-tracker/app.js
 
 test-metadata.json
 {
-  "appVersion": "3.7.1",
-  "testedAt": "2026-02-07T...",
-  "extractedFunctions": 15,
-  "totalFunctions": 15,
+  "appVersion": "3.10.4",
+  "testedAt": "2026-03-09T...",
+  "extractedFunctions": 19,
+  "totalFunctions": 19,
   "success": true
 }
    │
@@ -148,15 +149,16 @@ test-metadata.json
 │     ├── npm run extract                                          │
 │     ├── Read test-metadata.json                                  │
 │     ├── Verify APP_VERSION                                       │
-│     └── Check 15/15 functions extracted ✅                       │
+│     └── Check 19/19 functions extracted ✅                       │
 │                                                                   │
 │  4. Run Tests                                                     │
-│     ├── npm run test:unit (76 tests)                            │
-│     │   ├── Version tracking (2 tests)                           │
-│     │   ├── Formatters (15 tests)                                │
-│     │   ├── Parsers (18 tests)                                   │
-│     │   ├── Validators (25 tests)                                │
-│     │   └── Trend calculations (18 tests)                        │
+│     ├── npm run test:unit (201 tests)                           │
+│     │   ├── Formatters (25 tests)                                │
+│     │   ├── Parsers (26 tests)                                   │
+│     │   ├── Validators (30 tests)                                │
+│     │   ├── Transaction validation (62 tests)                    │
+│     │   ├── Trend calculations (27 tests)                        │
+│     │   └── Backup & settings (31 tests)                         │
 │     │                                                             │
 │     └── npm run test:e2e (Playwright)                           │
 │         ├── Transaction CRUD                                     │

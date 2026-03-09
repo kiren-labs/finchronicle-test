@@ -21,7 +21,7 @@ git push origin feature/my-feature
 ```
 
 **What runs in CI:**
-- ✅ Unit tests (76 tests, ~1 second)
+- ✅ Unit tests (201 tests, ~1 second)
 - ✅ E2E tests (20 tests, ~2-3 minutes)
 - Total: ~3-4 minutes
 
@@ -34,7 +34,7 @@ gh pr create --title "Add feature"
 ```
 
 **What runs in CI:**
-- ✅ Unit tests (76 tests, ~1 second)
+- ✅ Unit tests (201 tests, ~1 second)
 - ✅ E2E tests (20 tests, ~2-3 minutes)
 - Chromium only for speed
 - Catches bugs before merge
