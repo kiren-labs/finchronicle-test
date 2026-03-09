@@ -155,12 +155,13 @@ npm run playwright:report
 
 ## 🔧 How It Works
 
-### Unit & Integration Tests
+### Unit & Integration Tests (Modular Architecture v3.10.4+)
 
-1. **Extract Functions:** `npm run extract` extracts testable functions from `../finance-tracker/app.js`
-2. **Generate Module:** Creates `src/app.js` with exported functions
-3. **Run Tests:** Vitest runs tests against extracted functions
-4. **Mock Environment:** localStorage and Date.now() are mocked for consistency
+1. **Extract Functions:** `npm run extract` extracts testable functions from modular JavaScript files in `../finance-tracker/js/`
+2. **Module Mapping:** The extraction script knows which functions come from which modules (utils.js, currency.js, validation.js, etc.)
+3. **Generate Module:** Creates `src/app.js` with all exported functions and required dependencies
+4. **Run Tests:** Vitest runs tests against extracted functions
+5. **Mock Environment:** localStorage, state, and currencies are mocked for consistency
 
 ### E2E Tests
 
@@ -168,6 +169,152 @@ npm run playwright:report
 2. **Run Tests:** Tests run in real browsers with full DOM interaction
 3. **No Extraction:** E2E tests work directly with the production app
 4. **Clean State:** Each test starts with cleared localStorage
+
+## 🏗️ Modular Architecture (v3.10.4+)
+
+### Module Structure
+
+The main app is now split into ES modules for better maintainability:
+
+```
+finance-tracker/js/
+├── app.js              # Main entry point & initialization
+├── state.js            # Shared state, constants, currencies, categories
+├── utils.js            # Utility functions (formatters, parsers)
+├── currency.js         # Currency operations
+├── validation.js       # Transaction validation
+├── ui.js               # UI rendering & trend calculations
+├── settings.js         # Settings & backup functionality
+├── db.js               # IndexedDB operations
+├── import-export.js    # CSV import/export
+└── faq.js              # FAQ functionality (lazy loaded)
+```
+
+### Function-to-Module Mapping
+
+The extraction script uses this mapping to find functions:
+
+| Module | Functions |
+|--------|-----------|
+| **utils.js** | `formatNumber`, `formatDate`, `formatMonth`, `parseCSV`, `normalizeDate`, `normalizeImportedCategory`, `monthNameToNumber`, `findHeaderIndex`, `sanitizeHTML` |
+| **currency.js** | `getCurrency`, `getCurrencySymbol`, `formatCurrency` |
+| **validation.js** | `validateTransaction` |
+| **ui.js** | `getPreviousMonth`, `getMonthTotals`, `calculateMoMDelta`, `calculateExpensePercentage` |
+| **settings.js** | `getDaysSinceBackup`, `shouldShowBackupReminder` |
+
+### Adding New Functions to Tests
+
+**Step 1: Add function to source module**
+
+```javascript
+// In finance-tracker/js/utils.js
+export function myNewFunction(input) {
+  // Your logic here
+  return result;
+}
+```
+
+**Step 2: Update extraction script mapping**
+
+```javascript
+// In finance-tracker-tests/scripts/extract-functions.js
+const functionModuleMap = {
+  // ... existing functions ...
+  'myNewFunction': 'utils.js',  // Add this line
+}
+```
+
+**Step 3: Write unit tests**
+
+```javascript
+// In finance-tracker-tests/tests/unit/my-feature.test.js
+import { describe, it, expect } from 'vitest'
+import { myNewFunction } from '../../src/app.js'
+
+describe('myNewFunction', () => {
+  it('should process input correctly', () => {
+    const result = myNewFunction('test')
+    expect(result).toBe('expected')
+  })
+})
+```
+
+**Step 4: Run tests**
+
+```bash
+npm run test:unit  # Automatically extracts and tests
+```
+
+### Adding New Modules
+
+If you create a new module (e.g., `analytics.js`):
+
+**Step 1: Create the module**
+
+```javascript
+// finance-tracker/js/analytics.js
+export function calculateAverage(values) {
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+```
+
+**Step 2: Add module to extraction script**
+
+```javascript
+// In finance-tracker-tests/scripts/extract-functions.js
+
+// 1. Add to functionModuleMap
+const functionModuleMap = {
+  // ... existing functions ...
+  'calculateAverage': 'analytics.js',
+}
+
+// 2. Module will be auto-read from moduleFiles array
+```
+
+**Step 3: Extract and test**
+
+```bash
+npm run extract  # Should show "✅ Read analytics.js"
+npm run test:unit
+```
+
+### Troubleshooting Module Extraction
+
+**Issue: Function not found during extraction**
+
+```
+⚠️  Function not found: myFunction in utils.js
+```
+
+**Solution:** Ensure the function is exported in the source module:
+```javascript
+export function myFunction() { ... }  // ✅ Correct
+function myFunction() { ... }         // ❌ Wrong - not exported
+```
+
+**Issue: Dependencies not available**
+
+```
+ReferenceError: currencies is not defined
+```
+
+**Solution:** Check if the dependency is extracted in the script:
+- `currencies` → from `state.js` (should auto-extract)
+- `categories` → from `state.js` (should auto-extract)
+- `state` → from `state.js` (should auto-extract)
+
+**Issue: Test helpers not available**
+
+Use the provided test helper functions:
+```javascript
+import { __testSetLastBackupTimestamp, __testSetTransactions, __testResetBackupState } from '../../src/app.js'
+
+// Reset state before each test
+beforeEach(() => {
+  __testResetBackupState()
+})
+```
 
 ## 📝 Writing New Tests
 
