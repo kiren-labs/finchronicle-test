@@ -36,7 +36,7 @@ This document outlines the CI/CD strategy for automated testing across both repo
 2. Checks out test repository
 3. Extracts functions from app.js
 4. Verifies version and extraction success
-5. Runs unit tests (76 tests)
+5. Runs unit tests (201 tests)
 6. Runs E2E tests (Playwright)
 7. Uploads test results as artifacts
 8. Generates summary with version info
@@ -94,14 +94,14 @@ This document outlines the CI/CD strategy for automated testing across both repo
 ### Automatic Version Detection
 
 Every test run automatically:
-1. Extracts `APP_VERSION` from `finance-tracker/app.js`
+1. Extracts `APP_VERSION` from modular `finance-tracker/js/` files
 2. Creates `test-metadata.json`:
    ```json
    {
-     "appVersion": "3.7.1",
-     "testedAt": "2026-02-07T10:04:14.531Z",
-     "extractedFunctions": 15,
-     "totalFunctions": 15,
+     "appVersion": "3.10.4",
+     "testedAt": "2026-03-09T12:48:45.789Z",
+     "extractedFunctions": 19,
+     "totalFunctions": 19,
      "success": true
    }
    ```
@@ -129,10 +129,10 @@ GitHub Actions:
   ↓
   1. Checkout PR branch
   2. Checkout test repo
-  3. Extract functions → v3.7.1
-  4. Run 76 unit tests → ✅ Pass
+  3. Extract functions → v3.10.4
+  4. Run 201 unit tests → ✅ Pass
   5. Run E2E tests → ✅ Pass
-  6. Comment on PR: "All tests pass for v3.7.1"
+  6. Comment on PR: "All tests pass for v3.10.4"
   ↓
 Developer: Sees green checkmark, can merge
 ```
@@ -145,9 +145,9 @@ GitHub Actions:
   ↓
   1. Checkout test PR branch
   2. Checkout main app (main branch)
-  3. Extract functions → v3.7.1
+  3. Extract functions → v3.10.4
   4. Run updated tests → ✅ Pass
-  5. Comment: "Tests verified against app v3.7.1"
+  5. Comment: "Tests verified against app v3.10.4"
   ↓
 Tester: Merge test updates
 ```
@@ -241,25 +241,26 @@ If either repo is private, add a Personal Access Token (PAT):
 
 ### Tests Fail to Extract Functions
 
-**Symptom:** `extractedFunctions: 0/15`
+**Symptom:** `extractedFunctions: 0/19`
 
 **Solution:**
 ```bash
-# Check if app.js exists
-ls -la finance-tracker/app.js
+# Check if modules exist
+ls -la finance-tracker/js/
 
-# Verify function signatures
-grep "function " finance-tracker/app.js
+# Verify function exports
+grep "export function" finance-tracker/js/*.js
 ```
 
 ### Version Mismatch
 
-**Symptom:** Expected v3.7.1, got v3.7.0
+**Symptom:** Expected v3.10.4, got different version
 
 **Solution:**
-1. Check `finance-tracker/app.js` line 2: `const APP_VERSION = '3.7.1'`
-2. Verify `sw.js` and `manifest.json` match
-3. Re-run extraction: `npm run extract`
+1. Check `finance-tracker/index.html` for version comment
+2. Verify extraction reads from correct module files
+3. Check `scripts/extract-functions.js` for version detection
+4. Re-run extraction: `npm run extract`
 
 ### E2E Tests Timeout
 

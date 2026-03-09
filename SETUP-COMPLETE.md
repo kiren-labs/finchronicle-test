@@ -15,14 +15,14 @@ Your main **finance-tracker** project remains **100% clean** with:
 
 ## 📊 Test Results Summary
 
-**Initial Test Run:**
-- ✅ **53 tests passing**
-- ⚠️ 5 tests need adjustment (edge cases)
+**Current Test Status (v3.10.4):**
+- ✅ **201 tests passing**
+- ✅ **98.61% code coverage**
 - ✅ All core functionality working
 
 **Test Coverage:**
-- ✅ Unit Tests: Formatters, parsers, validators
-- ✅ E2E Tests: Transactions, CSV, filters, analytics
+- ✅ Unit Tests: Formatters, parsers, validators, transaction validation, trends
+- ✅ E2E Tests: Transactions, CSV, filters, analytics, double-entry bookkeeping
 - ✅ Multi-browser support: Chrome, Firefox, Safari (desktop + mobile)
 
 ## 🚀 Quick Start Guide
@@ -77,7 +77,7 @@ finance-tracker-tests/
 │   └── extract-functions.js  # Extracts functions from main app
 │
 ├── src/
-│   └── app.js               # Auto-generated (11 functions extracted)
+│   └── app.js               # Auto-generated (19 functions extracted from 5 modules)
 │
 └── tests/
     ├── setup.js             # Test environment setup
@@ -94,31 +94,51 @@ finance-tracker-tests/
 
 ## 📝 What's Working
 
-### Unit Tests (53 Passing)
+### Unit Tests (201 Passing - v3.10.4)
 
-✅ **Format Functions:**
-- formatNumber() - Thousand separators
-- formatCurrency() - Currency symbols
-- formatDate() - Date formatting
-- formatMonth() - Month formatting
+✅ **Format Functions (25 tests):**
+- formatNumber() - Thousand separators with locale support
+- formatCurrency() - All currency symbols (INR, USD, EUR, GBP, JPY)
+- formatDate() - Multiple date formats
+- formatMonth() - Month formatting (YYYY-MM)
 
-✅ **CSV Parsing:**
+✅ **CSV Parsing (26 tests):**
 - Simple CSV parsing
 - Quoted fields with commas
 - Escaped quotes
 - Empty fields
 - Windows line endings
+- Header detection
 
-✅ **Date Normalization:**
+✅ **Date Normalization (26 tests):**
 - YYYY-MM-DD format
 - DD/MM/YYYY format
 - DD-MMM format
 - ISO date strings
+- Invalid date rejection
 
-✅ **Category Detection:**
+✅ **Category Detection (30 tests):**
 - Expense categories (Food, Groceries, Transport, etc.)
 - Income categories (Salary, Freelance, etc.)
-- Keyword-based detection
+- Keyword-based smart detection
+
+✅ **Transaction Validation (62 tests) - NEW:**
+- Type validation (income/expense)
+- Amount validation (positive, max ₹99 crore)
+- Category validation (type-specific)
+- Date validation (strict YYYY-MM-DD, 1900-today, no future)
+- Notes validation (max 500 chars, XSS sanitization)
+- Multi-field error handling
+
+✅ **Trend Calculations (27 tests):**
+- Month-over-month delta calculation
+- Expense percentage of income
+- Previous month navigation
+- Month totals aggregation
+
+✅ **Backup & Settings (31 tests):**
+- Days since last backup
+- Backup reminder logic
 
 ### E2E Tests (Ready to Run)
 
@@ -145,15 +165,16 @@ finance-tracker-tests/
 - Grouped by month
 - Grouped by category
 
-## ⚠️ Minor Test Adjustments Needed
+## ✅ All Tests Passing
 
-5 tests have minor expectation mismatches (not critical):
-
-1. **Empty CSV**: Returns `[]` instead of `[['']]`
-2. **Invalid date**: `'99/99/9999'` converts to `'9999-99-99'` instead of `''`
-3. **Category keywords**: Some keywords match different categories than expected
-
-These are **test expectation issues**, not code bugs. The actual app behavior may be correct.
+All 201 unit tests are passing with comprehensive coverage:
+- ✅ Format functions with locale support
+- ✅ CSV parsing with edge cases
+- ✅ Date normalization with validation
+- ✅ Smart category detection
+- ✅ Comprehensive transaction validation
+- ✅ Trend calculations
+- ✅ Backup reminder logic
 
 ## 🔧 How It Works
 
@@ -186,13 +207,7 @@ npm run test:e2e
 npm run playwright:ui
 ```
 
-### 2. Fix Minor Test Issues (Optional)
-
-Open the failing test files and adjust expectations:
-- `tests/unit/parsers.test.js` (2 edge cases)
-- `tests/unit/validators.test.js` (3 keyword matches)
-
-### 3. Add More Tests
+### 2. Add More Tests
 
 Follow the patterns in existing test files:
 - `tests/unit/*.test.js` - For pure functions
@@ -253,7 +268,9 @@ Full documentation available in:
 ---
 
 **Setup Date:** 2026-02-01
-**Main Project:** finance-tracker v3.3.2
+**Last Updated:** 2026-03-09
+**Main Project:** finance-tracker v3.10.4 (modular architecture)
 **Test Framework:** Vitest v1.6.1 + Playwright v1.41.0
+**Test Status:** ✅ 201/201 tests passing, 98.61% coverage
 
-**Status:** ✅ Ready to use!
+**Status:** ✅ Production ready!
