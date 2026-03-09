@@ -62,34 +62,11 @@ const versionMatch = appJsContent.match(/(?:const|export const) APP_VERSION = ['
 const appVersion = versionMatch ? versionMatch[1] : 'unknown'
 console.log(`📦 App version: ${appVersion}`)
 
-// List of functions to extract for testing
-const functions = [
-  'formatCurrency',
-  'formatNumber',
-  'formatDate',
-  'formatMonth',
-  'parseCSV',
-  'normalizeDate',
-  'normalizeImportedCategory',
-  'monthNameToNumber',
-  'findHeaderIndex',
-  'getCurrencySymbol',
-  'getCurrency',
-  // v3.7.0+ trend calculation functions
-  'getPreviousMonth',
-  'getMonthTotals',
-  'calculateMoMDelta',
-  'calculateExpensePercentage',
-  // v3.9.0+ backup tracking functions
-  'getDaysSinceBackup',
-  'shouldShowBackupReminder',
-  // v3.10.2+ validation functions
-  'sanitizeHTML',
-  'validateTransaction',
-]
+// List of functions to extract for testing (keys of functionModuleMap)
+const functions = Object.keys(functionModuleMap)
 
 // Build testable module
-let moduleContent = `// Auto-generated from app.js
+let moduleContent = `// Auto-generated from modular JavaScript (v3.10.4+)
 // Do not edit manually - run 'npm run extract' to regenerate
 // Generated at: ${new Date().toISOString()}
 // App version: ${appVersion}
@@ -98,21 +75,25 @@ export const APP_VERSION = '${appVersion}';
 
 `
 
-// Extract currency data
-const currenciesMatch = scriptContent.match(/const currencies = ({[\s\S]*?});/)
+// Extract currency data from currency.js
+const currencyJsContent = moduleContents['currency.js'] || ''
+const currenciesMatch = currencyJsContent.match(/const currencies = ({[\s\S]*?});/)
 if (currenciesMatch) {
   moduleContent += `const currencies = ${currenciesMatch[1]};\n\n`
 }
 
-// Extract category data
-const categoriesMatch = scriptContent.match(/const categories = ({[\s\S]*?});/)
+// Extract category data from state.js or app.js
+const stateJsContent = readFileSync(resolve(jsDir, 'state.js'), 'utf-8')
+const categoriesMatch = stateJsContent.match(/(?:export )?const categories = ({[\s\S]*?});/)
+  || appJsContent.match(/(?:export )?const categories = ({[\s\S]*?});/)
 if (categoriesMatch) {
   moduleContent += `const categories = ${categoriesMatch[1]};\n\n`
 }
 
-// Helper function to extract complete function body
+// Helper function to extract complete function body including export keyword
 function extractFunction(code, functionName) {
-  const funcRegex = new RegExp(`function\\s+${functionName}\\s*\\([^)]*\\)\\s*\\{`)
+  // Try to match "export function" first, then fallback to just "function"
+  const funcRegex = new RegExp(`(?:export\\s+)?function\\s+${functionName}\\s*\\([^)]*\\)\\s*\\{`)
   const match = funcRegex.exec(code)
 
   if (!match) return null
@@ -128,21 +109,31 @@ function extractFunction(code, functionName) {
   }
 
   if (braceCount === 0) {
-    return code.substring(match.index, i)
+    const extracted = code.substring(match.index, i)
+    // Ensure it has export keyword
+    return extracted.startsWith('export') ? extracted : `export ${extracted}`
   }
 
   return null
 }
 
-// Extract each function
+// Extract each function from its respective module
 let extractedCount = 0
 functions.forEach((fnName) => {
-  const extracted = extractFunction(scriptContent, fnName)
+  const sourceModule = functionModuleMap[fnName]
+  const sourceCode = moduleContents[sourceModule]
+
+  if (!sourceCode) {
+    console.warn(`⚠️  Module not found for function: ${fnName} (expected in ${sourceModule})`)
+    return
+  }
+
+  const extracted = extractFunction(sourceCode, fnName)
   if (extracted) {
-    moduleContent += `export ${extracted}\n\n`
+    moduleContent += `${extracted}\n\n`
     extractedCount++
   } else {
-    console.warn(`⚠️  Function not found: ${fnName}`)
+    console.warn(`⚠️  Function not found: ${fnName} in ${sourceModule}`)
   }
 })
 
