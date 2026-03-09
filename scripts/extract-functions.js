@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const appJsPath = resolve(__dirname, '../../finance-tracker/app.js')
+const appJsPath = resolve(__dirname, '../../finance-tracker/js/app.js')
 const outputPath = resolve(__dirname, '../src/app.js')
 
 // Ensure src directory exists
