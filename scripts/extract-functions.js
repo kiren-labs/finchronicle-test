@@ -5,18 +5,60 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const appJsPath = resolve(__dirname, '../../finance-tracker/js/app.js')
+const jsDir = resolve(__dirname, '../../finance-tracker/js')
 const outputPath = resolve(__dirname, '../src/app.js')
 
 // Ensure src directory exists
 mkdirSync(dirname(outputPath), { recursive: true })
 
-console.log('📖 Reading app.js from:', appJsPath)
+console.log('📖 Reading modular JavaScript from:', jsDir)
 
-const scriptContent = readFileSync(appJsPath, 'utf-8')
+// Map of functions to their source modules (after refactoring to ES modules)
+const functionModuleMap = {
+  // utils.js
+  'formatNumber': 'utils.js',
+  'formatDate': 'utils.js',
+  'formatMonth': 'utils.js',
+  'parseCSV': 'utils.js',
+  'normalizeDate': 'utils.js',
+  'normalizeImportedCategory': 'utils.js',
+  'monthNameToNumber': 'utils.js',
+  'findHeaderIndex': 'utils.js',
+  'sanitizeHTML': 'utils.js',
+  // currency.js
+  'getCurrency': 'currency.js',
+  'getCurrencySymbol': 'currency.js',
+  'formatCurrency': 'currency.js',
+  // validation.js
+  'validateTransaction': 'validation.js',
+  // ui.js
+  'getPreviousMonth': 'ui.js',
+  'getMonthTotals': 'ui.js',
+  'calculateMoMDelta': 'ui.js',
+  'calculateExpensePercentage': 'ui.js',
+  // settings.js
+  'getDaysSinceBackup': 'settings.js',
+  'shouldShowBackupReminder': 'settings.js',
+}
 
-// Extract version from app.js
-const versionMatch = scriptContent.match(/const APP_VERSION = ['"]([^'"]+)['"]/)
+// Read all module files
+const moduleContents = {}
+const moduleFiles = [...new Set(Object.values(functionModuleMap))]
+
+moduleFiles.forEach(file => {
+  const filePath = resolve(jsDir, file)
+  try {
+    moduleContents[file] = readFileSync(filePath, 'utf-8')
+    console.log(`✅ Read ${file}`)
+  } catch (err) {
+    console.error(`❌ Failed to read ${file}:`, err.message)
+    moduleContents[file] = ''
+  }
+})
+
+// Extract version from app.js (version constant should still be there)
+const appJsContent = readFileSync(resolve(jsDir, 'app.js'), 'utf-8')
+const versionMatch = appJsContent.match(/(?:const|export const) APP_VERSION = ['"]([^'"]+)['"]/)
 const appVersion = versionMatch ? versionMatch[1] : 'unknown'
 console.log(`📦 App version: ${appVersion}`)
 
