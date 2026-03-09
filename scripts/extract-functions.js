@@ -56,9 +56,10 @@ moduleFiles.forEach(file => {
   }
 })
 
-// Extract version from app.js (version constant should still be there)
-const appJsContent = readFileSync(resolve(jsDir, 'app.js'), 'utf-8')
-const versionMatch = appJsContent.match(/(?:const|export const) APP_VERSION = ['"]([^'"]+)['"]/)
+// Read state.js for APP_VERSION and state object
+const stateJsPath = resolve(jsDir, 'state.js')
+const stateJsContent = readFileSync(stateJsPath, 'utf-8')
+const versionMatch = stateJsContent.match(/export const APP_VERSION = ['"]([^'"]+)['"]/)
 const appVersion = versionMatch ? versionMatch[1] : 'unknown'
 console.log(`📦 App version: ${appVersion}`)
 
@@ -73,7 +74,31 @@ let moduleContent = `// Auto-generated from modular JavaScript (v3.10.4+)
 
 export const APP_VERSION = '${appVersion}';
 
+// Mock localStorage for testing environment
+if (typeof localStorage === 'undefined') {
+  global.localStorage = {
+    getItem: () => 'INR',
+    setItem: () => {},
+    clear: () => {},
+  }
+}
+
 `
+
+// Extract state object structure from state.js
+const stateObjectMatch = stateJsContent.match(/export const state = ({[\s\S]*?});/)
+if (stateObjectMatch) {
+  moduleContent += `// Application state (mocked for testing)\nexport const state = ${stateObjectMatch[1]};\n\n`
+} else {
+  // Fallback state object
+  moduleContent += `// Application state (mocked for testing)
+export const state = {
+    db: null,
+    transactions: [],
+    lastBackupTimestamp: null,
+    currentTab: 'add',
+};\n\n`
+}
 
 // Extract currency data from currency.js
 const currencyJsContent = moduleContents['currency.js'] || ''
@@ -82,12 +107,10 @@ if (currenciesMatch) {
   moduleContent += `const currencies = ${currenciesMatch[1]};\n\n`
 }
 
-// Extract category data from state.js or app.js
-const stateJsContent = readFileSync(resolve(jsDir, 'state.js'), 'utf-8')
-const categoriesMatch = stateJsContent.match(/(?:export )?const categories = ({[\s\S]*?});/)
-  || appJsContent.match(/(?:export )?const categories = ({[\s\S]*?});/)
+// Extract category data from state.js
+const categoriesMatch = stateJsContent.match(/export const categories = ({[\s\S]*?});/)
 if (categoriesMatch) {
-  moduleContent += `const categories = ${categoriesMatch[1]};\n\n`
+  moduleContent += `export const categories = ${categoriesMatch[1]};\n\n`
 }
 
 // Helper function to extract complete function body including export keyword
@@ -137,36 +160,21 @@ functions.forEach((fnName) => {
   }
 })
 
-// Mock localStorage for functions that use it
+// Add test helper functions for manipulating state
 moduleContent += `
-// Global variables for backup functions (v3.9.0+)
-let lastBackupTimestamp = null
-let transactions = []
-
-// Mock localStorage for testing environment
-if (typeof localStorage === 'undefined') {
-  global.localStorage = {
-    getItem: () => 'INR',
-    setItem: () => {},
-    clear: () => {},
-  }
-}
-
-// Export global variable accessors for testing
-export { lastBackupTimestamp, transactions }
-
 // Test helper functions to manipulate module-level state
 export function __testSetLastBackupTimestamp(timestamp) {
-  lastBackupTimestamp = timestamp
+  state.lastBackupTimestamp = timestamp
 }
 
 export function __testSetTransactions(txArray) {
-  transactions = txArray
+  state.transactions = txArray
 }
 
-export function __testResetBackupState() {
-  lastBackupTimestamp = null
-  transactions = []
+export function __testResetState() {
+  state.lastBackupTimestamp = null
+  state.transactions = []
+  state.currentTab = 'add'
 }
 `
 
