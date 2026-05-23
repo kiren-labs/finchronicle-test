@@ -256,12 +256,35 @@ describe('validateTransaction - Amount Validation', () => {
 })
 
 describe('validateTransaction - Category Validation', () => {
-  it('should accept valid expense categories', () => {
+  it('should accept valid expense parent categories', () => {
     const validCategories = [
-      'Food', 'Groceries', 'Transport', 'Utilities/Bills',
+      'Food', 'Transport', 'Utilities/Bills', 'Healthcare', 'Housing',
       'Kids/School', 'Fees/Docs', 'Debt/Loans', 'Household',
-      'Other Expense', 'Rent', 'Healthcare', 'Personal/Shopping',
+      'Other Expense', 'Personal/Shopping',
       'Insurance/Taxes', 'Savings/Investments', 'Charity/Gifts', 'Misc/Buffer'
+    ]
+
+    validCategories.forEach(category => {
+      const transaction = {
+        type: 'expense',
+        amount: 100,
+        category: category,
+        date: '2026-02-01',
+        notes: ''
+      }
+      const result = validateTransaction(transaction)
+      expect(result.valid).toBe(true)
+    })
+  })
+
+  it('should accept valid expense sub-categories', () => {
+    // Children are valid leaf categories
+    const validCategories = [
+      'Groceries', 'Restaurants', 'Coffee/Tea', 'Delivery',   // Food children
+      'Fuel', 'Public Transit',                                 // Transport children
+      'Rent', 'Mortgage',                                       // Housing children
+      'Doctor', 'Medicine',                                     // Healthcare children
+      'EMI', 'Credit Card',                                     // Debt/Loans children
     ]
 
     validCategories.forEach(category => {
@@ -282,6 +305,22 @@ describe('validateTransaction - Category Validation', () => {
       'Salary', 'Business', 'Investment', 'Rental Income',
       'Gifts/Refunds', 'Freelance', 'Bonus', 'Other Income'
     ]
+
+    validCategories.forEach(category => {
+      const transaction = {
+        type: 'income',
+        amount: 1000,
+        category: category,
+        date: '2026-02-01',
+        notes: ''
+      }
+      const result = validateTransaction(transaction)
+      expect(result.valid).toBe(true)
+    })
+  })
+
+  it('should accept valid income sub-categories', () => {
+    const validCategories = ['Consulting', 'Sales', 'Dividends', 'Gift Received', 'Refund', 'Cashback']
 
     validCategories.forEach(category => {
       const transaction = {

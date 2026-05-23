@@ -46,6 +46,9 @@ const functionModuleMap = {
   'computeReconciledBase': 'reconciliation.js',
   'computeCheckedBalance': 'reconciliation.js',
   'filterCandidates': 'reconciliation.js',
+  // state.js helpers
+  'getAllCategoryNames': 'state.js',
+  'getCategoryParent': 'state.js',
 }
 
 // Read all module files
@@ -115,10 +118,23 @@ if (currenciesMatch) {
   console.warn('⚠️  Could not extract currencies object from state.js')
 }
 
-// Extract category data from state.js
-const categoriesMatch = stateJsContent.match(/export const categories = ({[\s\S]*?});/)
-if (categoriesMatch) {
-  moduleContent += `export const categories = ${categoriesMatch[1]};\n\n`
+// Extract category data from state.js (brace-counting for nested structure)
+function extractTopLevelObject(source, varName) {
+  const startPattern = new RegExp(`export const ${varName} = \\{`)
+  const startMatch = startPattern.exec(source)
+  if (!startMatch) return null
+  const startIdx = startMatch.index + startMatch[0].length - 1 // position of opening {
+  let braceCount = 0, i = startIdx
+  while (i < source.length) {
+    if (source[i] === '{') braceCount++
+    else if (source[i] === '}') { braceCount--; if (braceCount === 0) return source.substring(startIdx, i + 1) }
+    i++
+  }
+  return null
+}
+const categoriesExtracted = extractTopLevelObject(stateJsContent, 'categories')
+if (categoriesExtracted) {
+  moduleContent += `export const categories = ${categoriesExtracted};\n\n`
 } else {
   console.warn('⚠️  Could not extract categories object from state.js')
 }
