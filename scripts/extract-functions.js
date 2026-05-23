@@ -42,6 +42,10 @@ const functionModuleMap = {
   // settings.js
   'getDaysSinceBackup': 'settings.js',
   'shouldShowBackupReminder': 'settings.js',
+  // reconciliation.js
+  'computeReconciledBase': 'reconciliation.js',
+  'computeCheckedBalance': 'reconciliation.js',
+  'filterCandidates': 'reconciliation.js',
 }
 
 // Read all module files
