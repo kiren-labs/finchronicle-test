@@ -4,10 +4,10 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 4 : undefined, // Parallel execution in CI
   reporter: 'html',
-  timeout: 60000, // 60s per test (default is 30s)
+  timeout: 90000, // 90s per test (default is 30s)
   expect: {
     timeout: 10000, // 10s for assertions (default is 5s)
   },

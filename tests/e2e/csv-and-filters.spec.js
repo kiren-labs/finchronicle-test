@@ -283,7 +283,7 @@ test.describe('Filters and Pagination', () => {
       buffer: Buffer.from(csvContent),
     })
 
-    await expect(page.locator('.success-message')).toContainText('Imported 42 transaction')
+    await expect(page.locator('.success-message.show')).toContainText('Imported 42 transaction')
 
     await navigateToTab(page, 'listTab')
 
