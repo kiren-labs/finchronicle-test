@@ -25,6 +25,9 @@ const functionModuleMap = {
   'monthNameToNumber': 'utils.js',
   'findHeaderIndex': 'utils.js',
   'sanitizeHTML': 'utils.js',
+  'generateId': 'utils.js',
+  'getErrorLog': 'utils.js',
+  'clearErrorLog': 'utils.js',
   // currency.js
   'getCurrency': 'currency.js',
   'getCurrencySymbol': 'currency.js',

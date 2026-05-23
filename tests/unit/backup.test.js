@@ -153,22 +153,21 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       expect(transactionAge10Days >= 7).toBe(true) // Grace period expired
     })
 
-    it('should determine 30-day threshold correctly', () => {
-      // Test the threshold logic
+    it('should determine 14-day threshold correctly (v3.29.0 — was 30 days)', () => {
+      // Test the threshold logic — lowered from 30 to 14 in v3.29.0
       const testCases = [
         { days: 0, shouldRemind: false, label: 'today' },
         { days: 1, shouldRemind: false, label: '1 day' },
         { days: 7, shouldRemind: false, label: '7 days' },
-        { days: 14, shouldRemind: false, label: '14 days' },
-        { days: 29, shouldRemind: false, label: '29 days' },
-        { days: 30, shouldRemind: true, label: '30 days (threshold)' },
-        { days: 31, shouldRemind: true, label: '31 days' },
-        { days: 45, shouldRemind: true, label: '45 days' },
+        { days: 13, shouldRemind: false, label: '13 days' },
+        { days: 14, shouldRemind: true, label: '14 days (threshold)' },
+        { days: 15, shouldRemind: true, label: '15 days' },
+        { days: 30, shouldRemind: true, label: '30 days' },
         { days: 100, shouldRemind: true, label: '100 days' },
       ]
 
       testCases.forEach(({ days, shouldRemind, label }) => {
-        const result = days >= 30
+        const result = days >= 14
         expect(result).toBe(shouldRemind)
       })
     })
@@ -224,15 +223,15 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       expect(shouldRemind).toBe(true)
     })
 
-    it('Scenario: User backed up once, 2 weeks ago', () => {
+    it('Scenario: User backed up once, 2 weeks ago — triggers reminder (v3.29.0)', () => {
       const now = Date.now()
       const lastBackupTimestamp = now - (14 * oneDayInMs) // 14 days ago
 
       const daysSinceBackup = Math.floor((now - lastBackupTimestamp) / oneDayInMs)
 
-      // 14 days < 30 days threshold
-      const shouldRemind = daysSinceBackup >= 30
-      expect(shouldRemind).toBe(false)
+      // 14 days >= 14 days threshold (lowered from 30 in v3.29.0)
+      const shouldRemind = daysSinceBackup >= 14
+      expect(shouldRemind).toBe(true)
     })
 
     it('Scenario: User backed up 31 days ago - needs reminder', () => {
@@ -241,20 +240,20 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
 
       const daysSinceBackup = Math.floor((now - lastBackupTimestamp) / oneDayInMs)
 
-      // 31 days > 30 days threshold
-      const shouldRemind = daysSinceBackup >= 30
+      // 31 days > 14 days threshold
+      const shouldRemind = daysSinceBackup >= 14
       expect(shouldRemind).toBe(true)
     })
 
-    it('Scenario: Regular user, backs up monthly (25 days ago)', () => {
+    it('Scenario: Regular user, backs up monthly (25 days ago) — now triggers (v3.29.0)', () => {
       const now = Date.now()
       const lastBackupTimestamp = now - (25 * oneDayInMs) // 25 days ago
 
       const daysSinceBackup = Math.floor((now - lastBackupTimestamp) / oneDayInMs)
 
-      // Good practice - within 30 days
-      const shouldRemind = daysSinceBackup >= 30
-      expect(shouldRemind).toBe(false)
+      // 25 days >= 14 days threshold (v3.29.0)
+      const shouldRemind = daysSinceBackup >= 14
+      expect(shouldRemind).toBe(true)
     })
 
     it('Scenario: User ignored reminders for 100 days', () => {
@@ -264,7 +263,7 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       const daysSinceBackup = Math.floor((now - lastBackupTimestamp) / oneDayInMs)
 
       // Definitely needs backup
-      const shouldRemind = daysSinceBackup >= 30
+      const shouldRemind = daysSinceBackup >= 14
       expect(shouldRemind).toBe(true)
     })
 
@@ -275,7 +274,7 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       const daysSinceBackup = Math.floor((now - lastBackupTimestamp) / oneDayInMs)
 
       // Should not remind
-      const shouldRemind = daysSinceBackup >= 30
+      const shouldRemind = daysSinceBackup >= 14
       expect(shouldRemind).toBe(false)
     })
   })
@@ -418,19 +417,19 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       expect(result).toBe(true)
     })
 
-    it('should sort transactions by id and use the oldest one', () => {
+    it('should sort transactions by createdAt and use the oldest one', () => {
       const now = Date.now()
       const oneDayInMs = 24 * 60 * 60 * 1000
       
-      // Add transactions in random order
-      const tenDaysAgo = now - (10 * oneDayInMs)
-      const threeDaysAgo = now - (3 * oneDayInMs)
-      const fiveDaysAgo = now - (5 * oneDayInMs)
+      // Add transactions in random order with createdAt (v3.29.0 uses createdAt, not id)
+      const tenDaysAgo = new Date(now - (10 * oneDayInMs)).toISOString()
+      const threeDaysAgo = new Date(now - (3 * oneDayInMs)).toISOString()
+      const fiveDaysAgo = new Date(now - (5 * oneDayInMs)).toISOString()
       
       __testSetTransactions([
-        { id: fiveDaysAgo, amount: 500, category: 'Transport' },
-        { id: tenDaysAgo, amount: 1000, category: 'Food' }, // Oldest
-        { id: threeDaysAgo, amount: 200, category: 'Entertainment' }
+        { id: 'uuid-1', createdAt: fiveDaysAgo, amount: 500, category: 'Transport' },
+        { id: 'uuid-2', createdAt: tenDaysAgo, amount: 1000, category: 'Food' }, // Oldest
+        { id: 'uuid-3', createdAt: threeDaysAgo, amount: 200, category: 'Entertainment' }
       ])
       
       const result = shouldShowBackupReminder()
@@ -457,19 +456,19 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       expect(result).toBe(false)
     })
 
-    it('should handle transaction with lowest id when multiple transactions exist', () => {
+    it('should handle transaction with oldest createdAt when multiple transactions exist', () => {
       const now = Date.now()
       const oneDayInMs = 24 * 60 * 60 * 1000
       
-      // Create transactions with specific IDs to test sorting
-      const oldestId = now - (8 * oneDayInMs)
-      const middleId = now - (5 * oneDayInMs)
-      const newestId = now - (2 * oneDayInMs)
+      // Create transactions with createdAt timestamps (v3.29.0)
+      const oldestDate = new Date(now - (8 * oneDayInMs)).toISOString()
+      const middleDate = new Date(now - (5 * oneDayInMs)).toISOString()
+      const newestDate = new Date(now - (2 * oneDayInMs)).toISOString()
       
       __testSetTransactions([
-        { id: newestId, amount: 100, category: 'Food' },
-        { id: middleId, amount: 200, category: 'Transport' },
-        { id: oldestId, amount: 300, category: 'Entertainment' }
+        { id: 'uuid-a', createdAt: newestDate, amount: 100, category: 'Food' },
+        { id: 'uuid-b', createdAt: middleDate, amount: 200, category: 'Transport' },
+        { id: 'uuid-c', createdAt: oldestDate, amount: 300, category: 'Entertainment' }
       ])
       
       const result = shouldShowBackupReminder()
@@ -494,7 +493,7 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       __testResetBackupState()
     })
 
-    it('should return false when backed up less than 30 days ago', () => {
+    it('should return true when backed up 20 days ago (>= 14 day threshold v3.29.0)', () => {
       const now = Date.now()
       const oneDayInMs = 24 * 60 * 60 * 1000
       
@@ -504,23 +503,36 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       
       const result = shouldShowBackupReminder()
       
-      expect(result).toBe(false)
+      expect(result).toBe(true)
     })
 
-    it('should return true when backed up 30 or more days ago', () => {
+    it('should return false when backed up less than 14 days ago', () => {
       const now = Date.now()
       const oneDayInMs = 24 * 60 * 60 * 1000
       
-      // Backed up exactly 30 days ago
-      const thirtyDaysAgo = now - (30 * oneDayInMs)
-      __testSetLastBackupTimestamp(thirtyDaysAgo)
+      // Backed up 10 days ago
+      const tenDaysAgo = now - (10 * oneDayInMs)
+      __testSetLastBackupTimestamp(tenDaysAgo)
+      
+      const result = shouldShowBackupReminder()
+      
+      expect(result).toBe(false)
+    })
+
+    it('should return true when backed up 14 or more days ago', () => {
+      const now = Date.now()
+      const oneDayInMs = 24 * 60 * 60 * 1000
+      
+      // Backed up exactly 14 days ago
+      const fourteenDaysAgo = now - (14 * oneDayInMs)
+      __testSetLastBackupTimestamp(fourteenDaysAgo)
       
       const result = shouldShowBackupReminder()
       
       expect(result).toBe(true)
     })
 
-    it('should return true when backed up more than 30 days ago', () => {
+    it('should return true when backed up more than 14 days ago', () => {
       const now = Date.now()
       const oneDayInMs = 24 * 60 * 60 * 1000
       
