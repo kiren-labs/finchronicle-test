@@ -89,10 +89,11 @@ test.describe('Phase 2.3 — Reconciliation Workflow', () => {
 
   // ── Step 1: load transactions ────────────────────────────────────────────────
 
-  test('step 2 is hidden until Load Transactions is clicked', async ({ page }) => {
+  test('step 2 starts with no loaded reconciliation data', async ({ page }) => {
     await createAccount(page, { name: 'Checking', openingBalance: '10000' })
     await openReconciliationModal(page, 'Checking')
-    await expect(page.locator('#reconciliationStep2')).toBeHidden()
+    await expect(page.locator('#reconciliationStep2')).toBeVisible()
+    await expect(page.locator('#reconciliationList .reconciliation-row')).toHaveCount(0)
   })
 
   test('load transactions requires statement balance', async ({ page }) => {
@@ -101,8 +102,8 @@ test.describe('Phase 2.3 — Reconciliation Workflow', () => {
     await page.fill('#reconciliationStatementDate', '2026-05-31')
     // Leave balance empty
     await page.locator('#reconciliationLoadBtn').click()
-    // Step 2 should still be hidden
-    await expect(page.locator('#reconciliationStep2')).toBeHidden()
+    await expect(page.locator('#successMessage')).toContainText('Enter a valid statement balance.')
+    await expect(page.locator('#reconciliationList .reconciliation-row')).toHaveCount(0)
   })
 
   test('load transactions requires statement date', async ({ page }) => {
@@ -111,7 +112,8 @@ test.describe('Phase 2.3 — Reconciliation Workflow', () => {
     await page.fill('#reconciliationStatementBalance', '10000')
     // Leave date empty
     await page.locator('#reconciliationLoadBtn').click()
-    await expect(page.locator('#reconciliationStep2')).toBeHidden()
+    await expect(page.locator('#successMessage')).toContainText('Enter a statement date.')
+    await expect(page.locator('#reconciliationList .reconciliation-row')).toHaveCount(0)
   })
 
   test('step 2 appears after valid load with no transactions', async ({ page }) => {

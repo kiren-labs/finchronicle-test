@@ -182,9 +182,10 @@ test.describe('Filters and Pagination', () => {
     // Filter by Food
     await page.selectOption('#categoryFilter', 'Food')
 
-    // Should show only Food transactions
-    await expect(page.locator('.transaction-item')).toHaveCount(2)
-    await expect(page.locator('.transaction-category').first()).toHaveText('Food')
+    // Food is a parent category; filter includes Food + child categories (e.g. Groceries)
+    await expect(page.locator('.transaction-item')).toHaveCount(3)
+    const foodCategoryLabels = (await page.locator('.transaction-category').allTextContents()).map((text) => text.trim())
+    expect(foodCategoryLabels).toEqual(expect.arrayContaining(['Food', 'Groceries']))
 
     // Filter by Transport
     await page.selectOption('#categoryFilter', 'Transport')
