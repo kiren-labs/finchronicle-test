@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { generateId, getErrorLog, clearErrorLog } from '../../src/app.js'
 
 describe('generateId (v3.29.0 — crypto.randomUUID)', () => {

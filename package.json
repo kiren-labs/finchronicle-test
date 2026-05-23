@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "extract": "node scripts/extract-functions.js",
+    "lint": "eslint tests/ src/ scripts/",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:unit": "npm run extract && vitest run tests/unit",
     "test:integration": "npm run extract && vitest run tests/integration",
@@ -24,9 +25,12 @@
   "author": "Kiren Labs",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.41.0",
     "@vitest/coverage-v8": "^1.2.0",
     "@vitest/ui": "^1.2.0",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
     "happy-dom": "^13.0.0",
     "vitest": "^1.2.0"
   }

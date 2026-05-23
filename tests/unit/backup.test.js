@@ -166,7 +166,7 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
         { days: 100, shouldRemind: true, label: '100 days' },
       ]
 
-      testCases.forEach(({ days, shouldRemind, label }) => {
+      testCases.forEach(({ days, shouldRemind, label: _label }) => {
         const result = days >= 14
         expect(result).toBe(shouldRemind)
       })
@@ -189,19 +189,19 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
     const oneDayInMs = 24 * 60 * 60 * 1000
 
     it('Scenario: New user, no backup, no transactions', () => {
-      const hasTransactions = false
-      const lastBackupTimestamp = null
+      const _hasTransactions = false
+      const _lastBackupTimestamp = null
 
       // New user should not see reminder
-      const shouldRemind = hasTransactions
+      const shouldRemind = _hasTransactions
       expect(shouldRemind).toBe(false)
     })
 
     it('Scenario: New user, added first transaction today', () => {
       const now = Date.now()
-      const hasTransactions = true
+      const _hasTransactions = true
       const oldestTransactionTimestamp = now // Today
-      const lastBackupTimestamp = null
+      const _lastBackupTimestamp = null
 
       const daysSinceFirstTransaction = Math.floor((now - oldestTransactionTimestamp) / oneDayInMs)
 
@@ -212,9 +212,9 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
 
     it('Scenario: User has 7-day old transactions, never backed up', () => {
       const now = Date.now()
-      const hasTransactions = true
+      const _hasTransactions = true
       const oldestTransactionTimestamp = now - (7 * oneDayInMs) // 7 days ago
-      const lastBackupTimestamp = null
+      const _lastBackupTimestamp = null
 
       const daysSinceFirstTransaction = Math.floor((now - oldestTransactionTimestamp) / oneDayInMs)
 

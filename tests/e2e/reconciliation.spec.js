@@ -32,7 +32,7 @@ test.describe('Phase 2.3 — Reconciliation Workflow', () => {
     await page.waitForTimeout(300)
   }
 
-  async function openReconciliationModal(page, accountName) {
+  async function openReconciliationModal(page, _accountName) {
     await navigateToTab(page, 'settingsTab')
     // Click the edit button for the account
     const editBtn = page.locator('.account-edit-btn').first()
