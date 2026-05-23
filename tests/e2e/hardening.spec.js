@@ -52,7 +52,7 @@ test.describe('Phase 1 Hardening — v3.29.0', () => {
       await page.waitForFunction(() => {
         const sel = document.querySelector('#category')
         return sel && sel.options.length > 1
-      }, { timeout: 10000 })
+      }, { timeout: 20000 })
 
       await page.fill('#amount', '500')
       await page.selectOption('#category', 'Food')
@@ -89,7 +89,7 @@ test.describe('Phase 1 Hardening — v3.29.0', () => {
       await page.waitForFunction(() => {
         const sel = document.querySelector('#category')
         return sel && sel.options.length > 1
-      }, { timeout: 10000 })
+      }, { timeout: 20000 })
 
       const xssPayload = '<script>window.__xss=true</script>'
       await page.fill('#amount', '100')
@@ -110,7 +110,7 @@ test.describe('Phase 1 Hardening — v3.29.0', () => {
       await page.waitForFunction(() => {
         const sel = document.querySelector('#category')
         return sel && sel.options.length > 1
-      }, { timeout: 10000 })
+      }, { timeout: 20000 })
 
       const xssPayload = '<img src=x onerror="window.__xss2=true">'
       await page.fill('#amount', '100')

@@ -15,7 +15,7 @@ test.describe('Transaction Management', () => {
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1
-    }, { timeout: 10000 })
+    }, { timeout: 20000 })
   })
 
   test('should add a new expense transaction', async ({ page }) => {

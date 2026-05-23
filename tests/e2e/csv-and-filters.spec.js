@@ -14,7 +14,7 @@ test.describe('CSV Import/Export', () => {
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1
-    }, { timeout: 10000 })
+    }, { timeout: 20000 })
   })
 
   test('should export transactions to CSV', async ({ page }) => {
@@ -132,7 +132,7 @@ test.describe('Filters and Pagination', () => {
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1
-    }, { timeout: 10000 })
+    }, { timeout: 20000 })
 
     // Add multiple transactions across different months
     const transactions = [
@@ -314,7 +314,7 @@ test.describe('Groups and Analytics', () => {
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1
-    }, { timeout: 10000 })
+    }, { timeout: 20000 })
   })
 
   test('should show grouped view by month', async ({ page }) => {

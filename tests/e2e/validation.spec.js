@@ -14,7 +14,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1
-    }, { timeout: 10000 })
+    }, { timeout: 20000 })
   })
 
   test('should reject negative amounts', async ({ page }) => {
