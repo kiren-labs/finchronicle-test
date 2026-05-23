@@ -314,6 +314,40 @@ describe('validateTransaction - location (v3.16.0)', () => {
   })
 })
 
+// ─── Account Linking — v4.0.0 ────────────────────────────────────────────────
+
+describe('validateTransaction - account linking (v4.0.0)', () => {
+  it('should accept expense with fromAccount set', () => {
+    const result = validateTransaction({ ...base(), fromAccount: 'Checking' })
+    expect(result.valid).toBe(true)
+  })
+
+  it('should accept income with toAccount set', () => {
+    const result = validateTransaction({ type: 'income', amount: 5000, category: 'Salary', date: '2026-05-20', notes: '', toAccount: 'Savings' })
+    expect(result.valid).toBe(true)
+  })
+
+  it('should accept expense without fromAccount (optional)', () => {
+    const result = validateTransaction(base())
+    expect(result.valid).toBe(true)
+    expect(result.sanitized.fromAccount).toBeUndefined()
+  })
+
+  it('should not set fromAccount on income type', () => {
+    // income with toAccount should not gain an unexpected fromAccount
+    const result = validateTransaction({ type: 'income', amount: 1000, category: 'Salary', date: '2026-05-20', notes: '', toAccount: 'Bank' })
+    expect(result.valid).toBe(true)
+    expect(result.sanitized.toAccount).toBeDefined()
+  })
+
+  it('should not confuse account linking with transfer validation', () => {
+    // expense with fromAccount should NOT trigger transfer-only validation errors
+    const result = validateTransaction({ ...base(), fromAccount: 'Cash' })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+})
+
 // ─── Multi-currency — v3.24.0 ────────────────────────────────────────────────
 
 describe('validateTransaction - multi-currency (v3.24.0)', () => {
