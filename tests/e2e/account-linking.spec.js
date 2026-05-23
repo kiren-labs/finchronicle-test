@@ -24,9 +24,11 @@ test.describe('Phase 2.2 — Transaction ↔ Account Linking', () => {
       const isExpanded = await optionalHeader.getAttribute('aria-expanded')
       if (isExpanded === 'false') await optionalHeader.click()
     }
-    const toggle = page.locator('[data-field-toggle="accountLinking"]')
+    // The checkbox is CSS-hidden (opacity:0, 0x0); click the wrapping label instead
+    const toggle = page.locator('label:has([data-field-toggle="accountLinking"])')
     await toggle.waitFor({ state: 'visible', timeout: 5000 })
-    const checked = await toggle.isChecked()
+    const checkbox = page.locator('[data-field-toggle="accountLinking"]')
+    const checked = await checkbox.isChecked({ force: true })
     if (!checked) await toggle.click()
     await page.waitForTimeout(200)
     // Return to add tab
@@ -40,18 +42,17 @@ test.describe('Phase 2.2 — Transaction ↔ Account Linking', () => {
   // ── Helper: create an account via Accounts tab ──────────────────────────────
   async function createAccount(page, { name, type = 'checking', openingBalance = '0' }) {
     await navigateToTab(page, 'settingsTab')
-    const accountsSection = page.locator('#accountsSection, [data-section="accounts"]').first()
-    if (await accountsSection.isVisible()) {
-      // Try to find the add account button
-    }
-    // Use JS to call addAccount directly via the form
-    const addBtn = page.locator('#addAccountBtn, button:has-text("Add Account")').first()
+    const addBtn = page.locator('#addAccountBtn')
     await addBtn.waitFor({ state: 'visible', timeout: 5000 })
     await addBtn.click()
-    await page.fill('#accountName', name)
-    await page.selectOption('#accountType', type)
-    await page.fill('#openingBalance', openingBalance)
-    await page.click('#saveAccountBtn')
+    // Wait for modal to open (modal gains .show class)
+    await page.waitForSelector('#accountFormModal.show', { timeout: 5000 })
+    await page.fill('#accountNameInput', name)
+    await page.selectOption('#accountTypeSelect', type)
+    if (openingBalance !== '0') {
+      await page.fill('#accountBalanceInput', openingBalance)
+    }
+    await page.click('#accountFormSaveBtn')
     await page.waitForTimeout(300)
     await navigateToTab(page, 'addTab')
     await page.waitForFunction(() => {
@@ -69,13 +70,9 @@ test.describe('Phase 2.2 — Transaction ↔ Account Linking', () => {
 
   test('account linking toggle exists in Settings optional fields', async ({ page }) => {
     await navigateToTab(page, 'settingsTab')
-    const optionalHeader = page.locator('[data-toggle-optional-settings]')
-    if (await optionalHeader.isVisible()) {
-      const isExpanded = await optionalHeader.getAttribute('aria-expanded')
-      if (isExpanded === 'false') await optionalHeader.click()
-    }
-    const toggle = page.locator('[data-field-toggle="accountLinking"]')
-    await expect(toggle).toBeVisible()
+    // The checkbox itself is CSS-hidden; assert the visible label row exists
+    const toggleRow = page.locator('label:has([data-field-toggle="accountLinking"])')
+    await expect(toggleRow).toBeVisible()
   })
 
   test('enabling account linking shows field on income/expense form', async ({ page }) => {
