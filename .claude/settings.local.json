@@ -6,7 +6,12 @@
       "Bash(npm run test:unit:*)",
       "Bash(lsof:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm test *)",
+      "Read(//Users/kiren.paul/Projects/kiren-labs/finance-tracker/js/**)",
+      "Bash(npm run *)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright *)"
     ]
   },
   "enableAllProjectMcpServers": true,

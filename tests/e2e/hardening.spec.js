@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { navigateToTab } from './helpers.js'
+import { navigateToTab, clearAllStorage } from './helpers.js'
 
 test.describe('Phase 1 Hardening — v3.29.0', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await page.evaluate(() => localStorage.clear())
+    await clearAllStorage(page)
     await page.reload()
     await page.waitForLoadState('networkidle')
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })

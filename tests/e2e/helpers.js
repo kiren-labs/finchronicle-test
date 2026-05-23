@@ -4,6 +4,39 @@
  */
 
 /**
+ * Clear all browser storage (localStorage, sessionStorage, IndexedDB caches).
+ * Use in beforeEach to guarantee a clean slate across all browsers.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+export async function clearAllStorage(page) {
+  await page.evaluate(async () => {
+    localStorage.clear()
+    sessionStorage.clear()
+    // Unregister service workers so stale cached app versions don't serve on reload
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      await Promise.all(registrations.map(r => r.unregister()))
+    }
+    // Clear service worker Cache Storage (prevents stale app shell from being served)
+    if ('caches' in window) {
+      const cacheNames = await caches.keys()
+      await Promise.all(cacheNames.map(name => caches.delete(name)))
+    }
+    // Clear all IndexedDB databases (catches stale app version data in Firefox)
+    if (indexedDB.databases) {
+      const dbs = await indexedDB.databases()
+      await Promise.all(dbs.map(db => new Promise((res, rej) => {
+        const req = indexedDB.deleteDatabase(db.name)
+        req.onsuccess = res
+        req.onerror = rej
+        req.onblocked = res
+      })))
+    }
+  })
+}
+
+/**
  * Navigate to a tab using ARIA controls attribute.
  * Works for both desktop tabs and mobile bottom navigation.
  * This ensures success messages or overlays don't block tab navigation.

@@ -1,17 +1,13 @@
 import { test, expect } from '@playwright/test'
-import { navigateToTab } from './helpers.js'
+import { navigateToTab, clearAllStorage } from './helpers.js'
 
 test.describe('Transaction Management', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    // Clear localStorage for fresh start
-    await page.evaluate(() => localStorage.clear())
+    await clearAllStorage(page)
     await page.reload()
-    // Wait for app to be fully loaded and interactive
     await page.waitForLoadState('networkidle')
-    // Wait for the app to render (either top tabs or bottom nav)
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
-    // Wait for category dropdown to be populated (critical for WebKit)
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1

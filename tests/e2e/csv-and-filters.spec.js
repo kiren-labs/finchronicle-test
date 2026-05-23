@@ -1,16 +1,13 @@
 import { test, expect } from '@playwright/test'
-import { navigateToTab, addTransaction } from './helpers.js'
+import { navigateToTab, addTransaction, clearAllStorage } from './helpers.js'
 
 test.describe('CSV Import/Export', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await page.evaluate(() => localStorage.clear())
+    await clearAllStorage(page)
     await page.reload()
-    // Wait for app to be fully loaded and interactive
     await page.waitForLoadState('networkidle')
-    // Wait for the app to render (either top tabs or bottom nav)
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
-    // Wait for category dropdown to be populated (critical for WebKit)
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1
@@ -123,7 +120,7 @@ invalid-date,expense,Food,500,Invalid date
 test.describe('Filters and Pagination', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await page.evaluate(() => localStorage.clear())
+    await clearAllStorage(page)
     await page.reload()
     // Wait for app to be fully loaded and interactive
     await page.waitForLoadState('networkidle')
@@ -275,6 +272,11 @@ test.describe('Filters and Pagination', () => {
     const csvContent = `Date,Type,Category,Amount,Notes\n${foodRows}\n${transportRows}`
 
     const fileInput = page.locator('#importFile')
+    // Wait for any lingering success message from beforeEach to clear before importing
+    await page.waitForFunction(() => {
+      const el = document.querySelector('.success-message')
+      return !el || !el.classList.contains('show')
+    }, { timeout: 5000 }).catch(() => {})
     await fileInput.setInputFiles({
       name: 'test-pagination.csv',
       mimeType: 'text/csv',
@@ -304,13 +306,10 @@ test.describe('Filters and Pagination', () => {
 test.describe('Groups and Analytics', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await page.evaluate(() => localStorage.clear())
+    await clearAllStorage(page)
     await page.reload()
-    // Wait for app to be fully loaded and interactive
     await page.waitForLoadState('networkidle')
-    // Wait for the app to render (either top tabs or bottom nav)
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
-    // Wait for category dropdown to be populated (critical for WebKit)
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1

@@ -16,8 +16,7 @@ export default defineConfig({
     baseURL: 'http://localhost:8000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    // Performance optimizations
-    actionTimeout: 15000, // Reasonable timeout for actions
+    actionTimeout: 25000, // Increased for Firefox IndexedDB startup
     navigationTimeout: 30000,
     // Disable service workers in tests to prevent interference
     serviceWorkers: 'block',
@@ -48,6 +47,13 @@ export default defineConfig({
       use: {
         ...devices['Desktop Firefox'],
         viewport: { width: 1280, height: 720 },
+        launchOptions: {
+          firefoxUserPrefs: {
+            'browser.cache.disk.enable': false,
+            'browser.cache.memory.enable': false,
+            'browser.cache.offline.enable': false,
+          },
+        },
       },
     },
     {
@@ -70,7 +76,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'cd ../finance-tracker && python3 -m http.server 8000',
+    command: 'cd ../finance-tracker && python3 serve-nocache.py 8000',
     url: 'http://localhost:8000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

@@ -1,16 +1,13 @@
 import { test, expect } from '@playwright/test'
-import { navigateToTab, waitForSuccessMessage } from './helpers.js'
+import { navigateToTab, waitForSuccessMessage, clearAllStorage } from './helpers.js'
 
 test.describe('Transaction Validation (v3.10.2)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    // Clear localStorage for fresh start
-    await page.evaluate(() => localStorage.clear())
+    await clearAllStorage(page)
     await page.reload()
-    // Wait for app to be fully loaded and interactive
     await page.waitForLoadState('networkidle')
     await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
-    // Wait for category dropdown to be populated (critical for WebKit)
     await page.waitForFunction(() => {
       const categorySelect = document.querySelector('#category')
       return categorySelect && categorySelect.options.length > 1
