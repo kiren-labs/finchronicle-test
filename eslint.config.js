@@ -13,10 +13,11 @@ export default [
   },
 
   // src/app.js — auto-generated from browser source, uses browser globals
+  // Also uses `global` as a Node.js shim for localStorage in test environments
   {
     files: ['src/**/*.js'],
     languageOptions: {
-      globals: { ...globals.browser },
+      globals: { ...globals.browser, ...globals.node },
     },
   },
 
@@ -37,6 +38,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
+        ...globals.node,
         vi: 'readonly',
         describe: 'readonly',
         it: 'readonly',
@@ -53,7 +55,11 @@ export default [
   // Unused vars prefixed with _ are intentionally unused
   {
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', {
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
     },
   },
 ]

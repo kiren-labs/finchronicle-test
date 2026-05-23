@@ -206,7 +206,7 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       const daysSinceFirstTransaction = Math.floor((now - oldestTransactionTimestamp) / oneDayInMs)
 
       // Within 7-day grace period
-      const shouldRemind = lastBackupTimestamp === null && daysSinceFirstTransaction >= 7
+      const shouldRemind = _lastBackupTimestamp === null && daysSinceFirstTransaction >= 7
       expect(shouldRemind).toBe(false)
     })
 
@@ -219,7 +219,7 @@ describe('Backup Tracking Functions (v3.9.0)', () => {
       const daysSinceFirstTransaction = Math.floor((now - oldestTransactionTimestamp) / oneDayInMs)
 
       // Grace period exactly expired
-      const shouldRemind = lastBackupTimestamp === null && daysSinceFirstTransaction >= 7
+      const shouldRemind = _lastBackupTimestamp === null && daysSinceFirstTransaction >= 7
       expect(shouldRemind).toBe(true)
     })
 
