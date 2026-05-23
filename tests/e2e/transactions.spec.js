@@ -245,15 +245,24 @@ test.describe('Transaction Management', () => {
     await page.fill('#notes', 'Test persistence')
     await page.click('#submitBtn')
 
-    // Wait for success message to ensure transaction is saved to localStorage
+    // Wait for success message and form reset — confirms IndexedDB write committed
     await expect(page.locator('.success-message.show')).toBeVisible()
+    await page.waitForFunction(() => {
+      const amount = document.querySelector('#amount')
+      return amount && amount.value === ''
+    }, { timeout: 5000 })
 
-    // Reload page
+    // Reload and wait for app to re-initialize and load transactions from IndexedDB
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
+    await page.waitForFunction(() => {
+      const categorySelect = document.querySelector('#category')
+      return categorySelect && categorySelect.options.length > 1
+    }, { timeout: 20000 })
 
-    // Go to list
+    // Go to list and wait for it to render (transaction-item or empty-state)
     await navigateToTab(page, 'listTab')
+    await page.waitForSelector('.transaction-item, .empty-state', { state: 'visible', timeout: 10000 })
 
     // Data should still be there
     await expect(page.locator('.transaction-item')).toHaveCount(1)

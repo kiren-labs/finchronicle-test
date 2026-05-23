@@ -30,7 +30,7 @@ test.describe('Phase 1 Hardening — v3.29.0', () => {
         }
       })
       await page.reload()
-      await page.waitForLoadState('networkidle')
+      await page.waitForSelector('.summary-section, #add-tab', { state: 'visible' })
       expect(violations).toHaveLength(0)
     })
 
