@@ -49,6 +49,8 @@ const functionModuleMap = {
   // state.js helpers
   'getAllCategoryNames': 'state.js',
   'getCategoryParent': 'state.js',
+  // recurring.js (v4.1.0 — needed for forecast)
+  'computeNextDueDate': 'recurring.js',
 }
 
 // Read all module files
@@ -217,6 +219,132 @@ export function __testResetBackupState() {
   state.lastBackupTimestamp = null
   state.transactions = []
   state.currentTab = 'add'
+}
+
+// ============================================================================
+// v4.1.0 — Pure testable versions of forecast + health alert functions
+// These take explicit args instead of reading from module-level state,
+// making them unit-testable without DOM or IndexedDB.
+// ============================================================================
+
+export function getAccountBalance(accountName, accounts, transactions) {
+  const account = accounts.find(a => a.name === accountName)
+  const opening = account ? (account.openingBalance || 0) : 0
+  let balance = opening
+  for (const t of transactions) {
+    if (t.type === 'income' && t.toAccount === accountName) balance += t.amount
+    else if (t.type === 'expense' && t.fromAccount === accountName) balance -= t.amount
+    else if (t.type === 'transfer') {
+      if (t.fromAccount === accountName) balance -= t.amount
+      if (t.toAccount === accountName) balance += t.amount
+    }
+  }
+  return balance
+}
+
+export function buildForecast(accounts, transactions, recurringTemplates, horizonDays = 90) {
+  if (!recurringTemplates || recurringTemplates.length === 0) return { accountForecasts: {}, warnings: [] }
+
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const horizon = new Date(today); horizon.setDate(today.getDate() + horizonDays)
+
+  const events = []
+  for (const tmpl of recurringTemplates) {
+    if (!tmpl.enabled) continue
+    if (!tmpl.fromAccount && !tmpl.toAccount) continue
+    let dateStr = tmpl.nextDueDate
+    if (!dateStr) continue
+    let safety = 0
+    while (safety < 400) {
+      safety++
+      const d = new Date(dateStr + 'T00:00:00')
+      if (d > horizon) break
+      if (d >= today) {
+        events.push({ date: dateStr, dateObj: d, label: tmpl.name || tmpl.category || 'Recurring',
+          amount: tmpl.amount, type: tmpl.type, fromAccount: tmpl.fromAccount || null, toAccount: tmpl.toAccount || null })
+      }
+      dateStr = computeNextDueDate(tmpl.frequency, tmpl.dayOfMonth || d.getDate(), dateStr)
+    }
+  }
+  events.sort((a, b) => a.dateObj - b.dateObj)
+
+  const relevantAccounts = new Set()
+  for (const e of events) {
+    if (e.fromAccount) relevantAccounts.add(e.fromAccount)
+    if (e.toAccount) relevantAccounts.add(e.toAccount)
+  }
+  if (relevantAccounts.size === 0) return { accountForecasts: {}, warnings: [] }
+
+  const runningBalances = {}
+  const accountForecasts = {}
+  for (const name of relevantAccounts) {
+    runningBalances[name] = getAccountBalance(name, accounts, transactions)
+    accountForecasts[name] = { currentBalance: runningBalances[name], events: [] }
+  }
+
+  const warnings = []
+  for (const e of events) {
+    if (e.fromAccount && accountForecasts[e.fromAccount]) {
+      runningBalances[e.fromAccount] -= e.amount
+      const bal = runningBalances[e.fromAccount]
+      accountForecasts[e.fromAccount].events.push({ date: e.date, label: e.label, amount: -e.amount, runningBalance: bal })
+      if (bal < 0) warnings.push({ account: e.fromAccount, date: e.date, balance: bal })
+    }
+    if (e.toAccount && accountForecasts[e.toAccount]) {
+      runningBalances[e.toAccount] += e.amount
+      const bal = runningBalances[e.toAccount]
+      accountForecasts[e.toAccount].events.push({ date: e.date, label: e.label, amount: e.amount, runningBalance: bal })
+    }
+  }
+  return { accountForecasts, warnings }
+}
+
+export function checkInactivityAlert(transactions, todayStr) {
+  if (!transactions || transactions.length === 0) return null
+  const sorted = [...transactions].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+  const latest = new Date(sorted[0].createdAt || sorted[0].date)
+  const today = new Date(todayStr)
+  const diffDays = Math.floor((today - latest) / (1000 * 60 * 60 * 24))
+  return diffDays >= 5 ? { type: 'inactivity', diffDays } : null
+}
+
+export function checkBillDueAlert(recurringTemplates, accounts, transactions, todayStr, windowDays = 3) {
+  const alerts = []
+  if (!recurringTemplates) return alerts
+  const today = new Date(todayStr); today.setHours(0,0,0,0)
+  for (const tmpl of recurringTemplates) {
+    if (!tmpl.enabled || tmpl.type !== 'expense' || !tmpl.fromAccount || !tmpl.nextDueDate) continue
+    const due = new Date(tmpl.nextDueDate); due.setHours(0,0,0,0)
+    const daysUntil = Math.round((due - today) / (1000 * 60 * 60 * 24))
+    if (daysUntil < 0 || daysUntil > windowDays) continue
+    const balance = getAccountBalance(tmpl.fromAccount, accounts, transactions)
+    if (balance < tmpl.amount * 1.2) alerts.push({ type: 'bill-due', template: tmpl.name, daysUntil, balance, amount: tmpl.amount })
+  }
+  return alerts
+}
+
+export function checkSavingsRateTrendAlert(savingsRates) {
+  if (!savingsRates || savingsRates.length < 3) return null
+  const last3 = savingsRates.slice(-3)
+  const allBelow = last3.every(r => r !== null && r < 10)
+  if (!allBelow) return null
+  const valid = last3.filter(r => r !== null)
+  const avg = valid.reduce((s, r) => s + r, 0) / valid.length
+  return { type: 'savings-rate-trend', avg: parseFloat(avg.toFixed(1)) }
+}
+
+export function checkMonthlyPaceAlert(budgets, categorySpend, dayOfMonth, daysInMonth) {
+  const alerts = []
+  if (!budgets || dayOfMonth < 5) return alerts
+  for (const budget of budgets) {
+    const spent = categorySpend[budget.category] || 0
+    if (spent === 0) continue
+    const projected = (spent / dayOfMonth) * daysInMonth
+    if (projected > budget.monthlyLimit * 1.2) {
+      alerts.push({ type: 'monthly-pace', category: budget.category, projected: Math.round(projected), limit: budget.monthlyLimit })
+    }
+  }
+  return alerts
 }
 `
 
