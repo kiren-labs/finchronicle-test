@@ -119,6 +119,22 @@ if (categoriesMatch) {
   console.warn('⚠️  Could not extract categories object from state.js')
 }
 
+// Extract PAYMENT_METHODS from state.js
+const paymentMethodsMatch = stateJsContent.match(/export const PAYMENT_METHODS = (\[[\s\S]*?\]);/)
+if (paymentMethodsMatch) {
+  moduleContent += `export const PAYMENT_METHODS = ${paymentMethodsMatch[1]};\n\n`
+} else {
+  console.warn('⚠️  Could not extract PAYMENT_METHODS from state.js')
+}
+
+// Extract EXPENSE_TYPES from state.js
+const expenseTypesMatch = stateJsContent.match(/export const EXPENSE_TYPES = (\[[\s\S]*?\]);/)
+if (expenseTypesMatch) {
+  moduleContent += `export const EXPENSE_TYPES = ${expenseTypesMatch[1]};\n\n`
+} else {
+  console.warn('⚠️  Could not extract EXPENSE_TYPES from state.js')
+}
+
 // Helper function to extract complete function body including export keyword
 function extractFunction(code, functionName) {
   // Try to match "export function" first, then fallback to just "function"
