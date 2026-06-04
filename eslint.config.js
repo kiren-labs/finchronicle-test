@@ -2,6 +2,9 @@ import js from '@eslint/js'
 import globals from 'globals'
 
 export default [
+  {
+    ignores: ['node_modules/**', 'coverage/**', 'playwright-report/**', 'test-results/**'],
+  },
   js.configs.recommended,
 
   // scripts/ — runs in Node.js
@@ -49,6 +52,14 @@ export default [
         beforeAll: 'readonly',
         afterAll: 'readonly',
       },
+    },
+  },
+
+  // Root-level config files (Node.js)
+  {
+    files: ['playwright.config.js', 'vitest.config.js', 'eslint.config.js'],
+    languageOptions: {
+      globals: { ...globals.node },
     },
   },
 

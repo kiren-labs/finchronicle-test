@@ -10,6 +10,8 @@
     "test:unit": "npm run extract && vitest run tests/unit",
     "test:integration": "npm run extract && vitest run tests/integration",
     "test:e2e": "playwright test",
+    "test:e2e:fast": "playwright test --project=chromium --reporter=line",
+    "test:e2e:chromium": "playwright test --project=chromium",
     "test:watch": "npm run extract && vitest",
     "test:coverage": "npm run extract && vitest --coverage",
     "test:ui": "npm run extract && vitest --ui",
