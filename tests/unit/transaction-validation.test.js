@@ -144,7 +144,7 @@ describe('validateTransaction - Type Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'type',
-      message: 'Invalid transaction type'
+      message: 'Transaction type must be Income, Expense, or Transfer.'
     })
   })
 
@@ -190,7 +190,7 @@ describe('validateTransaction - Amount Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'amount',
-      message: 'Amount must be a positive number'
+      message: 'Amount must be a positive number.'
     })
   })
 
@@ -206,7 +206,7 @@ describe('validateTransaction - Amount Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'amount',
-      message: 'Amount must be a positive number'
+      message: 'Amount must be a positive number.'
     })
   })
 
@@ -222,7 +222,7 @@ describe('validateTransaction - Amount Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'amount',
-      message: 'Amount must be a positive number'
+      message: 'Amount must be a positive number.'
     })
   })
 
@@ -238,7 +238,7 @@ describe('validateTransaction - Amount Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'amount',
-      message: 'Amount exceeds maximum limit'
+      message: 'Amount exceeds maximum limit.'
     })
   })
 
@@ -347,7 +347,7 @@ describe('validateTransaction - Category Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'category',
-      message: 'Invalid category for transaction type'
+      message: 'This category is not available for this transaction type.'
     })
   })
 
@@ -363,7 +363,7 @@ describe('validateTransaction - Category Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'category',
-      message: 'Invalid category for transaction type'
+      message: 'This category is not available for this transaction type.'
     })
   })
 
@@ -379,7 +379,7 @@ describe('validateTransaction - Category Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'category',
-      message: 'Invalid category for transaction type'
+      message: 'This category is not available for this transaction type.'
     })
   })
 })
@@ -517,7 +517,7 @@ describe('validateTransaction - Notes Validation', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'notes',
-      message: 'Notes too long (max 500 characters)'
+      message: 'Notes too long (max 500 characters).'
     })
   })
 
@@ -701,7 +701,7 @@ describe('validateTransaction - Edge Cases', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'amount',
-      message: 'Amount exceeds maximum limit'
+      message: 'Amount exceeds maximum limit.'
     })
   })
 })
@@ -749,7 +749,7 @@ describe('validateTransaction - Comprehensive Branch Coverage', () => {
     // Should catch negative amount (not the max limit since it's negative)
     expect(result.errors).toContainEqual({
       field: 'amount',
-      message: 'Amount must be a positive number'
+      message: 'Amount must be a positive number.'
     })
   })
 
@@ -856,7 +856,7 @@ describe('validateTransaction - Comprehensive Branch Coverage', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'notes',
-      message: 'Notes too long (max 500 characters)'
+      message: 'Notes too long (max 500 characters).'
     })
   })
 
@@ -910,7 +910,7 @@ describe('validateTransaction - Comprehensive Branch Coverage', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'amount',
-      message: 'Amount exceeds maximum limit'
+      message: 'Amount exceeds maximum limit.'
     })
   })
 })

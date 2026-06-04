@@ -72,7 +72,7 @@ describe('validateTransaction - Transfer type', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'toAccount',
-      message: 'Source and destination cannot be the same',
+      message: 'Source and destination accounts cannot be the same.',
     })
   })
 
@@ -85,7 +85,7 @@ describe('validateTransaction - Transfer type', () => {
       toAccount: 'CASH',
     })
     expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.message === 'Source and destination cannot be the same')).toBe(true)
+    expect(result.errors.some(e => e.message === 'Source and destination accounts cannot be the same.')).toBe(true)
   })
 
   it('should sanitize transferNote', () => {
@@ -115,7 +115,7 @@ describe('validateTransaction - Tags', () => {
     const tags = Array.from({ length: 16 }, (_, i) => `tag${i}`)
     const result = validateTransaction({ ...base(), tags })
     expect(result.valid).toBe(false)
-    expect(result.errors).toContainEqual({ field: 'tags', message: 'Maximum 15 tags allowed' })
+    expect(result.errors).toContainEqual({ field: 'tags', message: 'Maximum 15 tags allowed.' })
   })
 
   it('should filter out tags longer than 30 characters', () => {
@@ -188,7 +188,7 @@ describe('validateTransaction - paymentMethod (v3.16.0)', () => {
   it('should reject an invalid payment method', () => {
     const result = validateTransaction({ ...base(), paymentMethod: 'bitcoin' })
     expect(result.valid).toBe(false)
-    expect(result.errors).toContainEqual({ field: 'paymentMethod', message: 'Invalid payment method' })
+    expect(result.errors).toContainEqual({ field: 'paymentMethod', message: 'Select a valid payment method.' })
   })
 
   it('should allow missing paymentMethod (nullable)', () => {
@@ -208,7 +208,7 @@ describe('validateTransaction - expenseType (v3.16.0)', () => {
   it('should reject an invalid expense type', () => {
     const result = validateTransaction({ ...base(), expenseType: 'luxury' })
     expect(result.valid).toBe(false)
-    expect(result.errors).toContainEqual({ field: 'expenseType', message: 'Invalid expense type' })
+    expect(result.errors).toContainEqual({ field: 'expenseType', message: 'Select a valid expense type.' })
   })
 
   it('should allow missing expenseType (nullable)', () => {
@@ -226,7 +226,7 @@ describe('validateTransaction - merchant (v3.16.0)', () => {
   it('should reject merchant name longer than 100 characters', () => {
     const result = validateTransaction({ ...base(), merchant: 'a'.repeat(101) })
     expect(result.valid).toBe(false)
-    expect(result.errors).toContainEqual({ field: 'merchant', message: 'Merchant name too long (max 100)' })
+    expect(result.errors).toContainEqual({ field: 'merchant', message: 'Merchant name is too long (max 100 characters).' })
   })
 
   it('should accept merchant name exactly 100 characters', () => {
@@ -254,7 +254,7 @@ describe('validateTransaction - attachedTo (v3.16.0)', () => {
   it('should reject name longer than 50 characters', () => {
     const result = validateTransaction({ ...base(), attachedTo: 'a'.repeat(51) })
     expect(result.valid).toBe(false)
-    expect(result.errors).toContainEqual({ field: 'attachedTo', message: 'Person name too long (max 50)' })
+    expect(result.errors).toContainEqual({ field: 'attachedTo', message: 'Person name is too long (max 50 characters).' })
   })
 
   it('should accept name exactly 50 characters', () => {
@@ -277,7 +277,7 @@ describe('validateTransaction - referenceId (v3.16.0)', () => {
   it('should reject reference ID longer than 100 characters', () => {
     const result = validateTransaction({ ...base(), referenceId: 'a'.repeat(101) })
     expect(result.valid).toBe(false)
-    expect(result.errors).toContainEqual({ field: 'referenceId', message: 'Reference ID too long (max 100)' })
+    expect(result.errors).toContainEqual({ field: 'referenceId', message: 'Reference ID is too long (max 100 characters).' })
   })
 
   it('should accept reference ID exactly 100 characters', () => {
@@ -300,7 +300,7 @@ describe('validateTransaction - location (v3.16.0)', () => {
   it('should reject location longer than 100 characters', () => {
     const result = validateTransaction({ ...base(), location: 'a'.repeat(101) })
     expect(result.valid).toBe(false)
-    expect(result.errors).toContainEqual({ field: 'location', message: 'Location too long (max 100)' })
+    expect(result.errors).toContainEqual({ field: 'location', message: 'Location is too long (max 100 characters).' })
   })
 
   it('should accept location exactly 100 characters', () => {
@@ -369,7 +369,7 @@ describe('validateTransaction - multi-currency (v3.24.0)', () => {
     expect(result.valid).toBe(false)
     expect(result.errors).toContainEqual({
       field: 'exchangeRate',
-      message: 'Exchange rate is required for foreign currency transactions',
+      message: 'Enter the conversion rate for this foreign currency.',
     })
   })
 
