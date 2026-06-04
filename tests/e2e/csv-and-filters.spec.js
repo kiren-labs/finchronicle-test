@@ -35,7 +35,7 @@ test.describe('CSV Import/Export', () => {
 
     // Click export and wait for download
     const downloadPromise = page.waitForEvent('download')
-    await page.click('button:has-text("Export CSV")')
+    await page.click('button:has-text("Export to spreadsheet")')
     const download = await downloadPromise
 
     // Verify filename format
@@ -55,7 +55,7 @@ test.describe('CSV Import/Export', () => {
 2025-01-31,expense,Transport,500,Taxi ride`
 
     // Upload file
-    const fileInput = page.locator('#importFile')
+    const fileInput = page.locator('#spreadsheetImportFile')
     await fileInput.setInputFiles({
       name: 'test-transactions.csv',
       mimeType: 'text/csv',
@@ -78,7 +78,7 @@ test.describe('CSV Import/Export', () => {
 01/02/2025,expense,Transport,200,DD/MM/YYYY format
 15-Jan,expense,Groceries,300,DD-MMM format`
 
-    const fileInput = page.locator('#importFile')
+    const fileInput = page.locator('#spreadsheetImportFile')
     await fileInput.setInputFiles({
       name: 'mixed-dates.csv',
       mimeType: 'text/csv',
@@ -101,7 +101,7 @@ invalid-date,expense,Food,500,Invalid date
 2025-02-02,expense,Food,not-a-number,Invalid amount
 2025-02-03,expense,Food,300,Valid row`
 
-    const fileInput = page.locator('#importFile')
+    const fileInput = page.locator('#spreadsheetImportFile')
     await fileInput.setInputFiles({
       name: 'mixed-validity.csv',
       mimeType: 'text/csv',
@@ -272,7 +272,7 @@ test.describe('Filters and Pagination', () => {
     const transportRows = Array.from({length: 21}, (_, i) => `2025-01-${String(i+1).padStart(2,'0')},expense,Transport,100,Transport${i+1}`).join('\n')
     const csvContent = `Date,Type,Category,Amount,Notes\n${foodRows}\n${transportRows}`
 
-    const fileInput = page.locator('#importFile')
+    const fileInput = page.locator('#spreadsheetImportFile')
     // Wait for any lingering success message from beforeEach to clear before importing
     await page.waitForFunction(() => {
       const el = document.querySelector('.success-message')
