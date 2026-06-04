@@ -42,7 +42,7 @@ test.describe('CSV Import/Export', () => {
     expect(download.suggestedFilename()).toMatch(/finchronicle-\d{4}-\d{2}-\d{2}\.csv/)
 
     // Verify success message
-    await expect(page.locator('.success-message')).toContainText('Export successful')
+    await expect(page.locator('.success-message')).toContainText('Exported successfully')
   })
 
   test('should import transactions from CSV', async ({ page }) => {

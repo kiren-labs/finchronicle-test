@@ -123,7 +123,7 @@ test.describe('Phase 2.3 — Reconciliation Workflow', () => {
     await page.fill('#reconciliationStatementDate', '2026-05-31')
     await page.locator('#reconciliationLoadBtn').click()
     await expect(page.locator('#reconciliationStep2')).toBeVisible()
-    await expect(page.locator('#reconciliationList')).toContainText('No unreconciled transactions')
+    await expect(page.locator('#reconciliationList')).toContainText('No transactions to check')
   })
 
   // ── Difference display ───────────────────────────────────────────────────────
@@ -407,7 +407,7 @@ test.describe('Phase 2.3 — Reconciliation Workflow', () => {
     await page.fill('#reconciliationStatementDate', '2026-05-31')
     await page.locator('#reconciliationLoadBtn').click()
 
-    await expect(page.locator('#reconciliationList')).toContainText('No unreconciled transactions')
+    await expect(page.locator('#reconciliationList')).toContainText('No transactions to check')
   })
 
   // ── Pending transaction status badge ─────────────────────────────────────────

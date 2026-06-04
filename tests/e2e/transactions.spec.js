@@ -32,7 +32,7 @@ test.describe('Transaction Management', () => {
 
     // Check success message appears
     await expect(page.locator('.success-message.show')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
 
     // Switch to List tab
     await navigateToTab(page, 'listTab')
@@ -59,7 +59,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Check success message
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
 
     // Go to list
     await navigateToTab(page, 'listTab')
@@ -106,7 +106,7 @@ test.describe('Transaction Management', () => {
     await page.click('#submitBtn')
 
     // Verify update message
-    await expect(page.locator('.success-message')).toContainText('Transaction updated!')
+    await expect(page.locator('.success-message')).toContainText('Transaction updated.')
 
     // Check updated values in list
     await navigateToTab(page, 'listTab')
@@ -161,7 +161,7 @@ test.describe('Transaction Management', () => {
     // Confirm modal appears
     await expect(page.locator('#deleteModal')).toHaveClass(/show/)
     await expect(page.locator('#deleteModal .modal-title')).toHaveText('Delete Transaction?')
-    await expect(page.locator('#deleteModal .modal-text')).toHaveText('This action cannot be undone.')
+    await expect(page.locator('#deleteModal .modal-text')).toHaveText("You can't undo this.")
 
     // Confirm deletion
     await page.click('.modal-btn-confirm')

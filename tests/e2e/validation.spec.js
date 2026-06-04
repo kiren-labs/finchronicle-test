@@ -29,7 +29,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
 
     // Should show error message
     await expect(page.locator('.success-message.show')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Amount must be a positive number')
+    await expect(page.locator('.success-message')).toContainText('Amount must be a positive number.')
 
     // Transaction should not be saved
     await navigateToTab(page, 'listTab')
@@ -50,7 +50,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.click('#submitBtn')
 
     await expect(page.locator('.success-message.show')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Amount must be a positive number')
+    await expect(page.locator('.success-message')).toContainText('Amount must be a positive number.')
   })
 
   test('should reject amounts exceeding maximum limit', async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe('Transaction Validation (v3.10.2)', () => {
     await page.click('#submitBtn')
 
     await expect(page.locator('.success-message.show')).toBeVisible()
-    await expect(page.locator('.success-message')).toContainText('Amount exceeds maximum limit')
+    await expect(page.locator('.success-message')).toContainText('Amount exceeds maximum limit.')
   })
 
 test('should accept maximum allowed amount', async ({ page }) => {
@@ -86,7 +86,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
   // Wait for success message more flexibly
   await page.waitForSelector('.success-message', { state: 'visible', timeout: 5000 })
-  await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+  await expect(page.locator('.success-message')).toContainText('Transaction saved.')
 })
 
   test('should reject future dates', async ({ page }) => {
@@ -125,7 +125,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   test('should accept today\'s date', async ({ page }) => {
@@ -138,7 +138,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   test('should reject notes longer than 500 characters', async ({ page }) => {
@@ -165,7 +165,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   test('should sanitize HTML in notes', async ({ page }) => {
@@ -229,7 +229,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   test('should validate category matches transaction type', async ({ page }) => {
@@ -243,7 +243,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   test('should show multiple validation errors if multiple fields invalid', async ({ page }) => {
@@ -271,9 +271,9 @@ test('should accept maximum allowed amount', async ({ page }) => {
     // Should show error message with validation errors
     await page.waitForSelector('.success-message.show', { state: 'visible', timeout: 5000 })
 
-    // Verify it contains an error indicator
+    // Verify it contains at least one validation error message
     const messageText = await page.locator('.success-message').textContent()
-    expect(messageText).toContain('⚠️')
+    expect(messageText).toContain('Amount must be a positive number.')
 
     // Wait for message to disappear and verify transaction not saved
     await page.waitForTimeout(2500)
@@ -289,7 +289,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   test('should accept decimal amounts with 2 decimal places', async ({ page }) => {
@@ -300,7 +300,7 @@ test('should accept maximum allowed amount', async ({ page }) => {
 
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   test('should preserve safe special characters in notes', async ({ page }) => {

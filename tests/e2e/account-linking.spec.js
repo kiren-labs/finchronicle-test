@@ -256,7 +256,7 @@ test.describe('Phase 2.2 — Transaction ↔ Account Linking', () => {
     await page.fill('#toAccount', 'Bank')
     await page.click('#submitBtn')
 
-    await expect(page.locator('.success-message')).toContainText('Transaction saved!')
+    await expect(page.locator('.success-message')).toContainText('Transaction saved.')
   })
 
   // ── Edit pre-population ─────────────────────────────────────────────────────
