@@ -92,6 +92,9 @@ export async function waitForSuccessMessage(page) {
 export async function addTransaction(page, transaction, waitForSuccess = true) {
   const { amount, category, date, notes, type = 'expense' } = transaction
 
+  // Ensure Add tab is visible (Home is now the default tab)
+  await navigateToTab(page, 'addTab')
+
   // Select transaction type if income
   if (type === 'income') {
     await page.click('[data-type="income"]')

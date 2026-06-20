@@ -15,8 +15,9 @@ test.describe('Transaction Management', () => {
   })
 
   test('should add a new expense transaction', async ({ page }) => {
-    // Add tab should be active by default (check mobile nav which is visible)
-    await expect(page.locator('#add-nav')).toHaveClass(/active/)
+    // Home tab is active by default; navigate to Add
+    await expect(page.locator('#home-nav')).toHaveClass(/active/)
+    await page.click('#add-nav')
 
     // Expense should be selected by default
     await expect(page.locator('[data-type="expense"]')).toHaveClass(/active/)
@@ -45,6 +46,7 @@ test.describe('Transaction Management', () => {
   })
 
   test('should add a new income transaction', async ({ page }) => {
+    await navigateToTab(page, 'addTab')
     // Switch to income type
     await page.click('[data-type="income"]')
     await expect(page.locator('[data-type="income"]')).toHaveClass(/active/)
@@ -73,6 +75,7 @@ test.describe('Transaction Management', () => {
 
   test('should edit existing transaction', async ({ page }) => {
     // Add a transaction first
+    await navigateToTab(page, 'addTab')
     await page.fill('#amount', '500')
     await page.selectOption('#category', 'Transport')
     await page.fill('#date', '2025-02-01')
@@ -116,6 +119,7 @@ test.describe('Transaction Management', () => {
 
   test('should cancel edit mode', async ({ page }) => {
     // Add a transaction
+    await navigateToTab(page, 'addTab')
     await page.fill('#amount', '100')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2025-02-01')
@@ -143,6 +147,7 @@ test.describe('Transaction Management', () => {
 
   test('should delete transaction with confirmation', async ({ page }) => {
     // Add transaction
+    await navigateToTab(page, 'addTab')
     await page.fill('#amount', '100')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2025-02-01')
@@ -173,6 +178,7 @@ test.describe('Transaction Management', () => {
 
   test('should cancel deletion', async ({ page }) => {
     // Add transaction
+    await navigateToTab(page, 'addTab')
     await page.fill('#amount', '100')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2025-02-01')
@@ -207,6 +213,7 @@ test.describe('Transaction Management', () => {
     const today = new Date().toISOString().split('T')[0]
 
     // Add expense
+    await navigateToTab(page, 'addTab')
     await page.fill('#amount', '1000')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', today)
@@ -239,6 +246,7 @@ test.describe('Transaction Management', () => {
 
   test('should persist data after page reload', async ({ page }) => {
     // Add transaction
+    await navigateToTab(page, 'addTab')
     await page.fill('#amount', '1000')
     await page.selectOption('#category', 'Food')
     await page.fill('#date', '2025-02-01')
@@ -273,6 +281,7 @@ test.describe('Transaction Management', () => {
 
   test('should handle transactions without notes', async ({ page }) => {
     // Add transaction without notes
+    await navigateToTab(page, 'addTab')
     await page.fill('#amount', '500')
     await page.selectOption('#category', 'Transport')
     await page.fill('#date', '2025-02-01')

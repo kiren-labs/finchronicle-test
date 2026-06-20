@@ -28,6 +28,7 @@ const functionModuleMap = {
   generateId: "utils.js",
   getErrorLog: "utils.js",
   clearErrorLog: "utils.js",
+  logError: "utils.js",
   // currency.js
   getCurrency: "currency.js",
   getCurrencySymbol: "currency.js",
@@ -87,6 +88,10 @@ let moduleContent = `// Auto-generated from modular JavaScript (v3.10.4+)
 // App version: ${appVersion}
 
 export const APP_VERSION = '${appVersion}';
+
+// Error log constants (from utils.js — needed by logError, getErrorLog, clearErrorLog)
+export const ERROR_LOG_KEY = 'errorLog';
+const MAX_ERRORS = 50;
 
 // Mock localStorage for testing environment
 if (typeof localStorage === 'undefined') {
