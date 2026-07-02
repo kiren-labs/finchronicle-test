@@ -120,15 +120,21 @@ describe('buildForecast — empty inputs', () => {
 
 describe('buildForecast — single monthly expense', () => {
   const accounts = [account('Checking', 20000)]
-  const tmpl = template({ nextDueDate: '2026-06-01', amount: 5000, frequency: 'monthly', dayOfMonth: 1 })
 
-  it('generates one event in a 30-day horizon from 2026-05-23', () => {
-    // horizon: 2026-05-23 → 2026-06-22  →  Jun 1 is within range
+  // Anchor relative to today so the test never rots as time passes.
+  // firstDue = today + 5 days → within 30-day horizon.
+  // secondDue = firstDue + 1 month ≈ today + 35 days → outside 30-day horizon but inside 60-day horizon.
+  const _today = new Date(); _today.setHours(0, 0, 0, 0)
+  const _soon = new Date(_today); _soon.setDate(_today.getDate() + 5)
+  const firstDue = _soon.toISOString().slice(0, 10)
+  const tmpl = template({ nextDueDate: firstDue, amount: 5000, frequency: 'monthly', dayOfMonth: _soon.getDate() })
+
+  it('generates one event in a 30-day horizon', () => {
     const { accountForecasts } = buildForecast(accounts, [], [tmpl], 30)
     expect(accountForecasts['Checking'].events.length).toBe(1)
   })
 
-  it('generates two events in a 60-day horizon (Jun 1 + Jul 1)', () => {
+  it('generates two events in a 60-day horizon', () => {
     const { accountForecasts } = buildForecast(accounts, [], [tmpl], 60)
     expect(accountForecasts['Checking'].events.length).toBe(2)
   })
